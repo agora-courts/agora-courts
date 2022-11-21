@@ -1,27 +1,15 @@
-use anchor_lang::{prelude::*, solana_program::pubkey::PUBKEY_BYTES};
-
-use crate::error::InputError;
+use crate::tools::anchor::DISCRIMINATOR_SIZE;
+use anchor_lang::prelude::*;
 
 #[account]
 pub struct Case {
-    pub dispute: Pubkey,
     pub votes: u32,
     pub evidence: String,
+    pub bump: u8,
 }
 
 impl Case {
-    pub fn get_space(evidence: String) -> usize {
-        PUBKEY_BYTES + 4 + (4 + evidence.len())
-    }
-
-    pub fn initialize(&mut self, dispute: Pubkey, evidence: String) -> Result<()> {
-        self.evidence = evidence;
-        self.votes = 0;
-        Ok(())
-    }
-
-    pub fn add_vote(&mut self) -> Result<()> {
-        self.votes += 1;
-        Ok(())
+    pub fn get_size(evidence: String) -> usize {
+        DISCRIMINATOR_SIZE + 4 + (4 + evidence.len()) + 1
     }
 }
