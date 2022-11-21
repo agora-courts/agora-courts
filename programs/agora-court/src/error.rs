@@ -12,8 +12,6 @@ pub enum InputError {
     DisputeNotVotable,
     #[msg("Dispute is not finalizable")]
     DisputeNotFinalizable,
-    #[msg("Evidence already submitted")]
-    EvidenceAlreadySubmitted,
     #[msg("Cases already submitted")]
     CasesAlreadySubmitted,
 }
