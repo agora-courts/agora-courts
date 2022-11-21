@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use instructions::*;
+use state::*;
 
 pub mod error;
 pub mod instructions;
@@ -12,10 +13,15 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 pub mod agora_court {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        Ok(())
+    pub fn create_dispute(
+        ctx: Context<CreateDispute>,
+        users: Vec<Pubkey>,
+        config: DisputeConfiguration,
+    ) -> Result<()> {
+        instructions::create_dispute(ctx, users, config)
+    }
+
+    pub fn create_case(ctx: Context<CreateCase>, dispute_id: u64, evidence: String) -> Result<()> {
+        instructions::create_case(ctx, dispute_id, evidence)
     }
 }
-
-#[derive(Accounts)]
-pub struct Initialize {}
