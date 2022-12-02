@@ -33,7 +33,7 @@ pub struct CreateCase<'info> {
     pub court_authority: UncheckedAccount<'info>,
 
     #[account(mut)]
-    pub payer: Signer<'info>,
+    pub payer: Signer<'info>, // user adding their case
 
     pub system_program: Program<'info, System>,
 }
