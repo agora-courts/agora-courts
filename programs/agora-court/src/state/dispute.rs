@@ -3,11 +3,13 @@ use anchor_lang::{prelude::*, solana_program::pubkey::PUBKEY_BYTES};
 
 #[derive(AnchorDeserialize, AnchorSerialize, Debug, Clone)]
 pub struct DisputeConfiguration {
-    pub ends_at: i64,
+    pub ends_at: i64, // block time of either expiration or end of voting period
+    pub rep_required: u64, // min amt of rep needed to vote on this dispute
+    pub arb_cost: u64, // cost for user to add their case
 }
 
 impl DisputeConfiguration {
-    pub const SIZE: usize = 8;
+    pub const SIZE: usize = 8 + 8;
 }
 
 #[account]
@@ -17,6 +19,7 @@ pub struct Dispute {
     pub status: DisputeStatus,
     pub abstained_votes: u32,
     pub submitted_cases: usize,
+    pub order_price: u32, // amt to increment winning voter's reputation by
     pub config: DisputeConfiguration,
     pub bump: u8,
 }
