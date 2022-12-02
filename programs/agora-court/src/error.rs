@@ -14,4 +14,6 @@ pub enum InputError {
     DisputeNotFinalizable,
     #[msg("Cases already submitted")]
     CasesAlreadySubmitted,
+    #[msg("Must include at least one user")]
+    UsersEmpty,
 }

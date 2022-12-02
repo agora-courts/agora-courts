@@ -15,15 +15,13 @@ pub struct CreateDispute<'info> {
 
     #[account(
         mut,
-        seeds = [b"court".as_ref(), court_authority.key().as_ref()],
+        seeds = [b"court".as_ref(), payer.key().as_ref()],
         bump = court.bump,
     )]
     pub court: Account<'info, Court>,
 
-    pub court_authority: Signer<'info>,
-
     #[account(mut)]
-    pub payer: Signer<'info>,
+    pub payer: Signer<'info>, // protocol that makes CPI
 
     pub system_program: Program<'info, System>,
 }
@@ -31,11 +29,13 @@ pub struct CreateDispute<'info> {
 pub fn create_dispute(
     ctx: Context<CreateDispute>,
     users: Vec<Pubkey>,
+    order_price: u32,
     config: DisputeConfiguration,
 ) -> Result<()> {
+    // TODO: check that config.ends_at is after current time
     require!(
-        users.contains(&ctx.accounts.payer.key()),
-        InputError::DisputeDoesNotContainPayer
+        !users.is_empty(),
+        InputError::UsersEmpty
     );
 
     let dispute = &mut ctx.accounts.dispute;
@@ -46,6 +46,7 @@ pub fn create_dispute(
         status: DisputeStatus::Waiting,
         abstained_votes: 0,
         submitted_cases: 0,
+        order_price,
         config,
         bump,
     });
