@@ -6,3 +6,6 @@ pub mod dispute;
 
 pub use case::*;
 pub mod case;
+
+pub use reputation::*;
+pub mod reputation;

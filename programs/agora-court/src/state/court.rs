@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 
 #[account]
 pub struct Court {
-    pub authority: Pubkey,
+    pub authority: Pubkey, // program interfacing with Agora Court
     pub num_disputes: u64,
     pub bump: u8,
 }
