@@ -4,6 +4,7 @@ use anchor_lang::prelude::*;
 pub struct Reputation {
     // State parameters - will change
     reputation: u32,
+    claim_queue: Vec<Pubkey>,
 }
 
 impl Reputation {
