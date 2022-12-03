@@ -32,10 +32,7 @@ pub fn create_dispute(
     config: DisputeConfiguration,
 ) -> Result<()> {
     // TODO: check that config.ends_at is after current time
-    require!(
-        !users.is_empty(),
-        InputError::UsersEmpty
-    );
+    require!(!users.is_empty(), InputError::UsersEmpty);
 
     let dispute = &mut ctx.accounts.dispute;
     let bump = *ctx.bumps.get("dispute").unwrap();
@@ -43,8 +40,11 @@ pub fn create_dispute(
         id: ctx.accounts.court.num_disputes,
         users,
         status: DisputeStatus::Waiting,
-        abstained_votes: 0,
         submitted_cases: 0,
+        leader: CaseLeader {
+            case: Pubkey::default(),
+            votes: 0,
+        },
         config,
         bump,
     });
