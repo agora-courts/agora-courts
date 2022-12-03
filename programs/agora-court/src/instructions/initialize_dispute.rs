@@ -29,7 +29,6 @@ pub struct CreateDispute<'info> {
 pub fn create_dispute(
     ctx: Context<CreateDispute>,
     users: Vec<Pubkey>,
-    order_price: u32,
     config: DisputeConfiguration,
 ) -> Result<()> {
     // TODO: check that config.ends_at is after current time
@@ -46,7 +45,6 @@ pub fn create_dispute(
         status: DisputeStatus::Waiting,
         abstained_votes: 0,
         submitted_cases: 0,
-        order_price,
         config,
         bump,
     });
