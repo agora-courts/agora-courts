@@ -41,6 +41,10 @@ pub fn create_dispute(
         users,
         status: DisputeStatus::Waiting,
         submitted_cases: 0,
+        leader: CaseLeader {
+            case: Pubkey::default(),
+            votes: 0,
+        },
         config,
         bump,
     });

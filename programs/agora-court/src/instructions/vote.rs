@@ -33,7 +33,7 @@ pub struct Vote<'info> {
         mut,
         seeds = [b"dispute".as_ref(), court.key().as_ref(), u64::to_ne_bytes(dispute_id).as_ref()],
         bump = dispute.bump,
-        constraint = dispute.status == DisputeStatus::Voting
+        constraint = dispute.can_vote()
                     @ InputError::DisputeNotVotable,
    )]
     pub dispute: Account<'info, Dispute>,
@@ -55,10 +55,18 @@ pub struct Vote<'info> {
 }
 
 pub fn vote(ctx: Context<Vote>, dispute_id: u64, user_case: Pubkey) -> Result<()> {
+    let dispute = &mut ctx.accounts.dispute;
     let reputation = &mut ctx.accounts.reputation;
     let case = &mut ctx.accounts.case;
 
     case.votes += 1;
+    if case.votes > dispute.leader.votes {
+        dispute.leader = CaseLeader {
+            case: user_case,
+            votes: case.votes,
+        };
+    }
+
     let dispute_record = DisputeRecord {
         dispute_id,
         dispute_end_time: ctx.accounts.dispute.config.ends_at,
