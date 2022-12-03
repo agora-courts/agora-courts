@@ -12,6 +12,10 @@ pub enum InputError {
     DisputeNotVotable,
     #[msg("Dispute is not finalizable")]
     DisputeNotFinalizable,
+    #[msg("Dispute not in valid court")]
+    DisputeNotInValidCourt,
+    #[msg("Dispute not claimable")]
+    DisputeNotClaimable,
     #[msg("Cases already submitted")]
     CasesAlreadySubmitted,
     #[msg("Must include at least one user")]
@@ -24,4 +28,8 @@ pub enum InputError {
     UserHasUnclaimedDisputes,
     #[msg("User is participating in a max of " + USER_MAX_DISPUTES.to_string() + " disputes")]
     UserMaxDisputesReached,
+    #[msg("User has no disputes to claim")]
+    UserHasNoDisputesToClaim,
+    #[msg("User cannot claim dispute")]
+    UserCannotClaimDispute,
 }
