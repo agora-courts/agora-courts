@@ -1,4 +1,4 @@
-use crate::{error::InputError, state::*};
+use crate::{state::*};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -8,7 +8,7 @@ pub struct InitializeCourt<'info> {
         seeds = [b"court".as_ref(), payer.key().as_ref()],
         bump,
         payer = payer,
-        space = Court::SIZE;
+        space = Court::SIZE
     )]
     pub court: Account<'info, Court>,
 
