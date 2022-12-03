@@ -8,7 +8,7 @@ use crate::tools::anchor::DISCRIMINATOR_SIZE;
 pub struct DisputeRecord {
     pub dispute_id: u64,
     pub dispute_end_time: i64,
-    pub case: Pubkey,
+    pub user: Pubkey,
 }
 
 impl Ord for DisputeRecord {
@@ -46,7 +46,7 @@ pub struct Reputation {
 
 impl Reputation {
     pub fn get_size(max_disputes: usize) -> usize {
-        DISCRIMINATOR_SIZE + (4 + (DisputeRecord::SIZE * max_disputes)) + 1
+        DISCRIMINATOR_SIZE + 8 + (4 + (DisputeRecord::SIZE * max_disputes)) + 1
     }
 
     pub fn add_reputation(&mut self, plus_rep: u32) {

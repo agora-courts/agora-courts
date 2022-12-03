@@ -38,7 +38,7 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
     let dispute = &mut ctx.accounts.dispute;
     let reputation = &mut ctx.accounts.reputation;
 
-    let _voted_on = reputation.claim_queue.pop().unwrap().case;
+    let _voted_on = reputation.claim_queue.pop().unwrap().user;
     if matches!(dispute.status, DisputeStatus::Concluded { winner: None }) {
         // TODO: Handle no winner.
         if dispute.users.contains(&ctx.accounts.payer.key()) {

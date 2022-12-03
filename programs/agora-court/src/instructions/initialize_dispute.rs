@@ -42,7 +42,7 @@ pub fn create_dispute(
         status: DisputeStatus::Waiting,
         submitted_cases: 0,
         leader: CaseLeader {
-            case: Pubkey::default(),
+            user: Pubkey::default(),
             votes: 0,
         },
         config,

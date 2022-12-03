@@ -67,7 +67,7 @@ pub fn create_case(ctx: Context<CreateCase>, dispute_id: u64, evidence: String) 
     let dispute_record = DisputeRecord {
         dispute_id,
         dispute_end_time: dispute.config.ends_at,
-        case: ctx.accounts.payer.key(),
+        user: ctx.accounts.payer.key(),
     };
     reputation.claim_queue.push(dispute_record);
     dispute.submitted_cases += 1;

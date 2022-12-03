@@ -62,7 +62,7 @@ pub fn vote(ctx: Context<Vote>, dispute_id: u64, user_case: Pubkey) -> Result<()
     case.votes += 1;
     if case.votes > dispute.leader.votes {
         dispute.leader = CaseLeader {
-            case: user_case,
+            user: user_case,
             votes: case.votes,
         };
     }
@@ -70,7 +70,7 @@ pub fn vote(ctx: Context<Vote>, dispute_id: u64, user_case: Pubkey) -> Result<()
     let dispute_record = DisputeRecord {
         dispute_id,
         dispute_end_time: ctx.accounts.dispute.config.ends_at,
-        case: user_case,
+        user: user_case,
     };
     reputation.claim_queue.push(dispute_record);
 
