@@ -16,8 +16,8 @@ pub enum InputError {
     DisputeNotInValidCourt,
     #[msg("Dispute not claimable")]
     DisputeNotClaimable,
-    #[msg("Cases already submitted")]
-    CasesAlreadySubmitted,
+    #[msg("Cases no longer can be submitted")]
+    CasesNoLongerCanBeSubmitted,
     #[msg("Must include at least one user")]
     UsersEmpty,
     #[msg("User already voted in this dispute")]
@@ -26,10 +26,10 @@ pub enum InputError {
     UserDoesNotHaveEnoughReputation,
     #[msg("User has unclaimed disputes")]
     UserHasUnclaimedDisputes,
+    #[msg("User has no unclaimed disputes")]
+    UserHasNoUnclaimedDisputes,
     #[msg("User is participating in a max of " + USER_MAX_DISPUTES.to_string() + " disputes")]
     UserMaxDisputesReached,
-    #[msg("User has no disputes to claim")]
-    UserHasNoDisputesToClaim,
     #[msg("User cannot claim dispute")]
     UserCannotClaimDispute,
 }
