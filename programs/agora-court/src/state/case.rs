@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 
 #[account]
 pub struct Case {
-    pub votes: u32, // PDAs that contain voter PKs
+    pub votes: u32,
     pub evidence: String,
     pub bump: u8,
 }

@@ -1,4 +1,4 @@
-use crate::{error::InputError, state::*};
+use crate::{constant::USER_MAX_DISPUTES, error::InputError, state::*};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -15,10 +15,22 @@ pub struct CreateCase<'info> {
 
     #[account(
         mut,
+        seeds = [b"reputation".as_ref(), court_authority.key().as_ref(), payer.key().as_ref()],
+        bump = reputation.bump,
+        constraint = !reputation.has_unclaimed_disputes()
+                    @ InputError::UserHasUnclaimedDisputes,
+
+        constraint = reputation.claim_queue.len() < USER_MAX_DISPUTES
+                    @ InputError::UserMaxDisputesReached,
+    )]
+    pub reputation: Account<'info, Reputation>,
+
+    #[account(
+        mut,
         seeds = [b"dispute".as_ref(), court.key().as_ref(), u64::to_ne_bytes(dispute_id).as_ref()],
         bump = dispute.bump,
-        constraint = dispute.status == DisputeStatus::Waiting
-                    @ InputError::CasesAlreadySubmitted,
+        constraint = dispute.can_add_case()
+                    @ InputError::CasesNoLongerCanBeSubmitted,
 
         constraint = dispute.users.contains(&payer.key())
                     @ InputError::UserDoesNotHaveCase,
@@ -41,8 +53,9 @@ pub struct CreateCase<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn create_case(ctx: Context<CreateCase>, _dispute_id: u64, evidence: String) -> Result<()> {
+pub fn create_case(ctx: Context<CreateCase>, dispute_id: u64, evidence: String) -> Result<()> {
     let dispute = &mut ctx.accounts.dispute;
+    let reputation = &mut ctx.accounts.reputation;
     // TODO: transfer `dispute.arb_cost` from `payer` to `dispute` escrow
     let case = &mut ctx.accounts.case;
     let bump = *ctx.bumps.get("case").unwrap();
@@ -51,9 +64,13 @@ pub fn create_case(ctx: Context<CreateCase>, _dispute_id: u64, evidence: String)
         evidence,
         bump,
     });
+    let dispute_record = DisputeRecord {
+        dispute_id,
+        dispute_end_time: dispute.config.ends_at,
+        user: ctx.accounts.payer.key(),
+    };
+    reputation.claim_queue.push(dispute_record);
     dispute.submitted_cases += 1;
-    // this doesn't prevent one person submitting multiple cases,
-    // I propose pre-initializing all cases in `initialize_dispute.rs`
     if dispute.submitted_cases == dispute.users.len() {
         dispute.status = DisputeStatus::Voting;
     }
