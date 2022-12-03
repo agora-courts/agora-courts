@@ -6,6 +6,7 @@ pub struct DisputeConfiguration {
     pub ends_at: i64,      // block time of either expiration or end of voting period
     pub rep_required: u64, // min amt of rep needed to vote on this dispute
     pub arb_cost: u64,     // cost for user to add their case
+    pub rep_risked: u32,   // amt to increment winning/decrement losing voter's reputation by
 }
 
 impl DisputeConfiguration {
@@ -18,7 +19,6 @@ pub struct Dispute {
     pub users: Vec<Pubkey>,
     pub status: DisputeStatus,
     pub submitted_cases: usize,
-    pub order_price: u64, // amt to increment winning voter's reputation by
     pub config: DisputeConfiguration,
     pub bump: u8,
 }

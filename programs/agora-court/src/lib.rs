@@ -17,10 +17,9 @@ pub mod agora_court {
     pub fn create_dispute(
         ctx: Context<CreateDispute>,
         users: Vec<Pubkey>,
-        order_price: u64,
         config: DisputeConfiguration,
     ) -> Result<()> {
-        instructions::create_dispute(ctx, users, order_price, config)
+        instructions::create_dispute(ctx, users, config)
     }
 
     pub fn create_case(ctx: Context<CreateCase>, dispute_id: u64, evidence: String) -> Result<()> {
