@@ -9,7 +9,7 @@ pub struct Claim<'info> {
         seeds = [b"reputation".as_ref(), court_authority.key().as_ref(), payer.key().as_ref()],
         bump = reputation.bump,
         constraint = reputation.has_unclaimed_disputes()
-                    @ InputError::UserHasNoDisputesToClaim,
+                    @ InputError::UserHasNoUnclaimedDisputes,
 
         constraint = reputation.claim_queue.peek().unwrap().dispute_id == dispute_id
                     @ InputError::UserCannotClaimDispute,
@@ -20,7 +20,7 @@ pub struct Claim<'info> {
         mut,
         seeds = [b"dispute".as_ref(), court_authority.key().as_ref(), u64::to_ne_bytes(dispute_id).as_ref()],
         bump = dispute.bump,
-        constraint = matches!(dispute.status, DisputeStatus::Resolved { .. })
+        constraint = matches!(dispute.status, DisputeStatus::Concluded { .. })
                     @ InputError::DisputeNotClaimable,
    )]
     pub dispute: Account<'info, Dispute>,
@@ -39,13 +39,20 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
     let reputation = &mut ctx.accounts.reputation;
 
     let _voted_on = reputation.claim_queue.pop().unwrap().case;
-    if matches!(
+    if matches!(dispute.status, DisputeStatus::Concluded { winner: None }) {
+        // TODO: Handle no winner.
+        if dispute.users.contains(&ctx.accounts.payer.key()) {
+            // TODO: Handle arb_cost refund to user who submitted case.
+        }
+    } else if matches!(
         dispute.status,
-        DisputeStatus::Resolved { winner: _voted_on }
+        DisputeStatus::Concluded {
+            winner: Some(_voted_on)
+        }
     ) {
-        reputation.add_reputation(dispute.order_price);
+        reputation.add_reputation(dispute.config.rep_risked);
     } else {
-        reputation.sub_reputation(dispute.order_price);
+        reputation.sub_reputation(dispute.config.rep_risked);
     }
 
     Ok(())
