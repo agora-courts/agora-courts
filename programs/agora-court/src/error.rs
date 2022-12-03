@@ -16,4 +16,12 @@ pub enum InputError {
     CasesAlreadySubmitted,
     #[msg("Must include at least one user")]
     UsersEmpty,
+    #[msg("User already voted in this dispute")]
+    UserAlreadyVoted,
+    #[msg("User does not have enough reputation to vote")]
+    UserDoesNotHaveEnoughReputation,
+    #[msg("User has unclaimed disputes")]
+    UserHasUnclaimedDisputes,
+    #[msg("User is participating in a max of " + USER_MAX_DISPUTES.to_string() + " disputes")]
+    UserMaxDisputesReached,
 }
