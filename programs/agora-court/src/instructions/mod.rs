@@ -10,5 +10,8 @@ pub mod close_dispute;
 pub use initialize_court::*;
 pub mod initialize_court;
 
+pub use initialize_reputation::*;
+pub mod initialize_reputation;
+
 pub use vote::*;
 pub mod vote;

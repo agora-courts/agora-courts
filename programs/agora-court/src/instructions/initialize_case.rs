@@ -16,9 +16,12 @@ pub struct CreateCase<'info> {
     #[account(
         mut,
         seeds = [b"dispute".as_ref(), court.key().as_ref(), u64::to_ne_bytes(dispute_id).as_ref()],
+        bump = dispute.bump,
+        constraint = dispute.status == DisputeStatus::Waiting
+                    @ InputError::CasesAlreadySubmitted,
+
         constraint = dispute.users.contains(&payer.key())
                     @ InputError::UserDoesNotHaveCase,
-        bump = dispute.bump,
     )]
     pub dispute: Account<'info, Dispute>,
 
@@ -41,11 +44,6 @@ pub struct CreateCase<'info> {
 pub fn create_case(ctx: Context<CreateCase>, _dispute_id: u64, evidence: String) -> Result<()> {
     let dispute = &mut ctx.accounts.dispute;
     // TODO: transfer `dispute.arb_cost` from `payer` to `dispute` escrow
-    require!(
-        dispute.status == DisputeStatus::Waiting,
-        InputError::CasesAlreadySubmitted
-    );
-
     let case = &mut ctx.accounts.case;
     let bump = *ctx.bumps.get("case").unwrap();
     case.set_inner(Case {
