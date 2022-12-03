@@ -49,12 +49,12 @@ impl Reputation {
         DISCRIMINATOR_SIZE + (4 + (DisputeRecord::SIZE * max_disputes)) + 1
     }
 
-    pub fn add_reputation(&mut self, plus_rep: u64) {
-        self.reputation = self.reputation.saturating_add(plus_rep);
+    pub fn add_reputation(&mut self, plus_rep: u32) {
+        self.reputation = self.reputation.saturating_add(plus_rep as u64);
     }
 
-    pub fn sub_reputation(&mut self, minus_rep: u64) {
-        self.reputation = self.reputation.saturating_sub(minus_rep);
+    pub fn sub_reputation(&mut self, minus_rep: u32) {
+        self.reputation = self.reputation.saturating_sub(minus_rep as u64);
     }
 
     pub fn in_dispute(&self, dispute_id: u64) -> bool {
