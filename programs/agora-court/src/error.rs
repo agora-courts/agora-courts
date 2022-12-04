@@ -4,6 +4,8 @@ use anchor_lang::error_code;
 pub enum InputError {
     #[msg("Invalid court authority")]
     InvalidCourtAuthority,
+    #[msg("Invalid end time")]
+    InvalidEndTime,
     #[msg("Dispute does not contain payer")]
     DisputeDoesNotContainPayer,
     #[msg("User does not have a case in this dispute")]

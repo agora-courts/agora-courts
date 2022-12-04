@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 #[instruction(users: Vec<Pubkey>)]
-pub struct CreateDispute<'info> {
+pub struct InitializeDispute<'info> {
     #[account(
         init,
         seeds = [b"dispute".as_ref(), court.key().as_ref(), u64::to_ne_bytes(court.num_disputes).as_ref()],
@@ -26,12 +26,13 @@ pub struct CreateDispute<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn create_dispute(
-    ctx: Context<CreateDispute>,
+pub fn initialize_dispute(
+    ctx: Context<InitializeDispute>,
     users: Vec<Pubkey>,
     config: DisputeConfiguration,
 ) -> Result<()> {
-    // TODO: check that config.ends_at is after current time
+    require!(Clock::get().unwrap().unix_timestamp < config.init_cases_ends_at, InputError::InvalidEndTime);
+    require!(Clock::get().unwrap().unix_timestamp < config.ends_at, InputError::InvalidEndTime);
     require!(!users.is_empty(), InputError::UsersEmpty);
 
     let dispute = &mut ctx.accounts.dispute;

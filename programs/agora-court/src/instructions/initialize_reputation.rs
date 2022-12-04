@@ -4,7 +4,7 @@ use crate::{constant::USER_MAX_DISPUTES, state::*};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-pub struct CreateReputation<'info> {
+pub struct InitializeReputation<'info> {
     #[account(
         init,
         seeds = [b"reputation".as_ref(), court_authority.key().as_ref(), payer.key().as_ref()],
@@ -23,7 +23,7 @@ pub struct CreateReputation<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn create_reputation(ctx: Context<CreateReputation>) -> Result<()> {
+pub fn initialize_reputation(ctx: Context<InitializeReputation>) -> Result<()> {
     let reputation = &mut ctx.accounts.reputation;
     let bump = *ctx.bumps.get("reputation").unwrap();
     reputation.set_inner(Reputation {

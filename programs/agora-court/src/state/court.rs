@@ -1,5 +1,5 @@
 use crate::tools::anchor::DISCRIMINATOR_SIZE;
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, solana_program::pubkey::PUBKEY_BYTES};
 
 #[account]
 pub struct Court {
@@ -9,5 +9,5 @@ pub struct Court {
 }
 
 impl Court {
-    pub const SIZE: usize = DISCRIMINATOR_SIZE + 32 + 8 + 1;
+    pub const SIZE: usize = DISCRIMINATOR_SIZE + PUBKEY_BYTES + 8 + 1;
 }
