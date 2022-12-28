@@ -1,9 +1,29 @@
 use crate::{error::InputError, state::*};
 use anchor_lang::prelude::*;
 
+use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
+
 #[derive(Accounts)]
 #[instruction(dispute_id: u64)]
 pub struct Claim<'info> {
+    #[account(
+        mut, 
+        associated_token::mint = mint,
+        associated_token::authority = dispute,
+    )]
+    pub dispute_token: Account<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        associated_token::mint = mint,
+        associated_token::authority = payer,   
+    )]
+    pub user_token: Account<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub mint: Account<'info, Mint>,
+
     #[account(
         mut,
         seeds = [b"reputation".as_ref(), court_authority.key().as_ref(), payer.key().as_ref()],
@@ -31,25 +51,45 @@ pub struct Claim<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
+    pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
     let dispute = &mut ctx.accounts.dispute;
+    let dispute_token = &mut ctx.accounts.dispute_token;
     let reputation = &mut ctx.accounts.reputation;
 
     let _voted_on = reputation.claim_queue.pop().unwrap().user;
     if matches!(dispute.status, DisputeStatus::Concluded { winner: None }) {
-        // TODO: Handle no winner.
-        if dispute.users.contains(&ctx.accounts.payer.key()) {
-            // TODO: Handle arb_cost refund to user who submitted case.
-        }
+        let amount_to_transfer = dispute.config.rep_required;
+        let context = CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            Transfer {
+                from: dispute_token.to_account_info(),
+                to: ctx.accounts.user_token.to_account_info(),
+                authority: dispute.to_account_info(),
+            }
+        );
+        transfer(context, amount_to_transfer)?;        
     } else if matches!(
         dispute.status,
         DisputeStatus::Concluded {
             winner: Some(_voted_on)
         }
     ) {
+        let amount_to_transfer = (dispute.submitted_cases * dispute.config.rep_required) / dispute.leader.votes;
+        let context = CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            Transfer {
+                from: dispute_token.to_account_info(),
+                to: ctx.accounts.user_token.to_account_info(),
+                authority: dispute.to_account_info(),
+            }
+        );
+        transfer(context, amount_to_transfer)?;
+
         reputation.add_reputation(dispute.config.rep_risked);
     } else {
         reputation.sub_reputation(dispute.config.rep_risked);

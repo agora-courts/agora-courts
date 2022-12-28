@@ -1,9 +1,29 @@
 use crate::{constant::USER_MAX_DISPUTES, error::InputError, state::*};
 use anchor_lang::prelude::*;
 
+use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
+
 #[derive(Accounts)]
 #[instruction(dispute_id: u64, evidence: String)]
-pub struct CreateCase<'info> {
+pub struct InitializeCase<'info> {
+    #[account(
+        mut, 
+        associated_token::mint = mint,
+        associated_token::authority = dispute,
+    )]
+    pub dispute_token: Account<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        associated_token::mint = mint,
+        associated_token::authority = payer,   
+    )]
+    pub user_token: Account<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub mint: Account<'info, Mint>,
+
     #[account(
         init,
         seeds = [b"case".as_ref(), court.key().as_ref(), dispute.key().as_ref(), payer.key().as_ref()],
@@ -49,14 +69,26 @@ pub struct CreateCase<'info> {
 
     #[account(mut)]
     pub payer: Signer<'info>, // user adding their case
-
+    pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
-pub fn create_case(ctx: Context<CreateCase>, dispute_id: u64, evidence: String) -> Result<()> {
+pub fn initialize_case(ctx: Context<InitializeCase>, dispute_id: u64, evidence: String) -> Result<()> {
     let dispute = &mut ctx.accounts.dispute;
     let reputation = &mut ctx.accounts.reputation;
-    // TODO: transfer `dispute.arb_cost` from `payer` to `dispute` escrow
+    
+    let amount_to_transfer = dispute.config.arb_cost;
+    let context = CpiContext::new(
+        ctx.accounts.token_program.to_account_info(),
+        Transfer {
+            from: ctx.accounts.user_token.to_account_info(),
+            to: ctx.accounts.dispute_token.to_account_info(),
+            authority: ctx.accounts.payer.to_account_info(),
+        }
+    );
+    transfer(context, amount_to_transfer)?;
+
     let case = &mut ctx.accounts.case;
     let bump = *ctx.bumps.get("case").unwrap();
     case.set_inner(Case {
@@ -71,7 +103,7 @@ pub fn create_case(ctx: Context<CreateCase>, dispute_id: u64, evidence: String) 
     };
     reputation.claim_queue.push(dispute_record);
     dispute.submitted_cases += 1;
-    if dispute.submitted_cases == dispute.users.len() {
+    if dispute.submitted_cases == dispute.users.len().try_into().unwrap() {
         dispute.status = DisputeStatus::Voting;
     }
 
