@@ -26,8 +26,8 @@ pub mod agora_court {
         instructions::initialize_case(ctx, dispute_id, evidence)
     }
 
-    pub fn initialize_court(ctx: Context<InitializeCourt>) -> Result<()> {
-        instructions::initialize_court(ctx)
+    pub fn initialize_court(ctx: Context<InitializeCourt>, reputation_mint: Pubkey, payment_mint: Pubkey, max_dispute_votes: u16) -> Result<()> {
+        instructions::initialize_court(ctx, reputation_mint, payment_mint, max_dispute_votes)
     }
 
     pub fn initialize_dispute(
