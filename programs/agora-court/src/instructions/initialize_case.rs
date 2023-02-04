@@ -78,6 +78,7 @@ pub fn initialize_case(ctx: Context<InitializeCase>, dispute_id: u64, evidence: 
     let dispute = &mut ctx.accounts.dispute;
     let reputation = &mut ctx.accounts.reputation;
     
+    // Transfer arb_costs to escrow account
     let amount_to_transfer = dispute.config.arb_cost;
     let context = CpiContext::new(
         ctx.accounts.token_program.to_account_info(),
@@ -96,14 +97,16 @@ pub fn initialize_case(ctx: Context<InitializeCase>, dispute_id: u64, evidence: 
         evidence,
         bump,
     });
+
     let dispute_record = DisputeRecord {
         dispute_id,
         dispute_end_time: dispute.config.ends_at,
         user: ctx.accounts.payer.key(),
     };
     reputation.claim_queue.push(dispute_record);
+
     dispute.submitted_cases += 1;
-    if dispute.submitted_cases == dispute.users.len().try_into().unwrap() {
+    if dispute.submitted_cases == dispute.users.len() as u64 {
         dispute.status = DisputeStatus::Voting;
     }
 

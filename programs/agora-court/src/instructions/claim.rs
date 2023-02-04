@@ -61,9 +61,17 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
     let dispute_token = &mut ctx.accounts.dispute_token;
     let reputation = &mut ctx.accounts.reputation;
 
+    let _payer = &mut ctx.accounts.payer;
     let _voted_on = reputation.claim_queue.pop().unwrap().user;
-    if matches!(dispute.status, DisputeStatus::Concluded { winner: None }) {
-        let amount_to_transfer = dispute.config.rep_required;
+
+    // Refund arb_cost to winning party.
+    if matches!(
+        dispute.status,
+        DisputeStatus::Concluded {
+            winner: Some(_payer)
+        }
+    ) {
+        let amount_to_transfer = dispute.config.arb_cost;
         let context = CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
             Transfer {
@@ -72,14 +80,22 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
                 authority: dispute.to_account_info(),
             }
         );
-        transfer(context, amount_to_transfer)?;        
+        transfer(context, amount_to_transfer)?;
+
+        reputation.add_reputation(dispute.config.rep_risked);
+        return Ok(())
+    }
+
+    // Distribute arb_cost of loser(s) party to winning voters.
+    if matches!(dispute.status, DisputeStatus::Concluded { winner: None }) {
+        
     } else if matches!(
         dispute.status,
         DisputeStatus::Concluded {
             winner: Some(_voted_on)
         }
     ) {
-        let amount_to_transfer = (dispute.submitted_cases * dispute.config.rep_required) / dispute.leader.votes;
+        let amount_to_transfer = ((dispute.submitted_cases - 1) * dispute.config.arb_cost) / dispute.leader.votes;
         let context = CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
             Transfer {

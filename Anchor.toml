@@ -1,14 +1,14 @@
 [features]
 seeds = true
 skip-lint = false
-[programs.localnet]
-agora_court = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+[programs.devnet]
+agora_court = "7XVbwGZara96w6qiw2VuhaPUAoNQyyVDHxN6sC4YHY3N"
 
 [registry]
-url = "https://api.apr.dev"
+url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "/Users/kevinz/.config/solana/id.json"
 
 [scripts]
