@@ -10,9 +10,9 @@ pub struct InitializeReputation<'info> {
         seeds = [b"reputation".as_ref(), court_authority.key().as_ref(), payer.key().as_ref()],
         bump,
         payer = payer,
-        space = Reputation::get_size(USER_MAX_DISPUTES)
+        space = VoterRecord::get_size(USER_MAX_DISPUTES)
     )]
-    pub reputation: Account<'info, Reputation>,
+    pub reputation: Account<'info, VoterRecord>,
 
     /// CHECK: Creator of court.
     pub court_authority: UncheckedAccount<'info>,
@@ -26,7 +26,7 @@ pub struct InitializeReputation<'info> {
 pub fn initialize_reputation(ctx: Context<InitializeReputation>) -> Result<()> {
     let reputation = &mut ctx.accounts.reputation;
     let bump = *ctx.bumps.get("reputation").unwrap();
-    reputation.set_inner(Reputation {
+    reputation.set_inner(VoterRecord {
         reputation: 0,
         claim_queue: BinaryHeap::with_capacity(USER_MAX_DISPUTES),
         bump,

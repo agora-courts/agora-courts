@@ -27,14 +27,14 @@ pub struct Claim<'info> {
     #[account(
         mut,
         seeds = [b"reputation".as_ref(), court_authority.key().as_ref(), payer.key().as_ref()],
-        bump = reputation.bump,
-        constraint = reputation.has_unclaimed_disputes()
+        bump = voter_record.bump,
+        constraint = voter_record.has_unclaimed_disputes()
                     @ InputError::UserHasNoUnclaimedDisputes,
 
-        constraint = reputation.claim_queue.peek().unwrap().dispute_id == dispute_id
+        constraint = voter_record.claim_queue.peek().unwrap().dispute_id == dispute_id
                     @ InputError::UserCannotClaimDispute,
     )]
-    pub reputation: Account<'info, Reputation>,
+    pub voter_record: Account<'info, VoterRecord>,
 
     #[account(
         mut,
@@ -59,10 +59,10 @@ pub struct Claim<'info> {
 pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
     let dispute = &mut ctx.accounts.dispute;
     let dispute_token = &mut ctx.accounts.dispute_token;
-    let reputation = &mut ctx.accounts.reputation;
+    let voter_record = &mut ctx.accounts.voter_record;
 
     let _payer = &mut ctx.accounts.payer;
-    let _voted_on = reputation.claim_queue.pop().unwrap().user;
+    let _voted_on = voter_record.claim_queue.pop().unwrap().user;
 
     // Refund arb_cost to winning party.
     if matches!(
@@ -71,7 +71,7 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
             winner: Some(_payer)
         }
     ) {
-        let amount_to_transfer = dispute.config.arb_cost;
+        let amount_to_transfer = dispute.config.pay_cost;
         let context = CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
             Transfer {
@@ -82,7 +82,7 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
         );
         transfer(context, amount_to_transfer)?;
 
-        reputation.add_reputation(dispute.config.tkn_risked);
+        voter_record.add_reputation(dispute.config.rep_cost);
         return Ok(())
     }
 
@@ -95,7 +95,7 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
             winner: Some(_voted_on)
         }
     ) {
-        let amount_to_transfer = ((dispute.submitted_cases - 1) * dispute.config.arb_cost) / dispute.leader.votes;
+        let amount_to_transfer = ((dispute.submitted_cases - 1) * dispute.config.pay_cost) / dispute.leader.votes;
         let context = CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
             Transfer {
@@ -106,9 +106,9 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
         );
         transfer(context, amount_to_transfer)?;
 
-        reputation.add_reputation(dispute.config.tkn_risked);
+        voter_record.add_reputation(dispute.config.rep_cost);
     } else {
-        reputation.sub_reputation(dispute.config.tkn_risked);
+        voter_record.sub_reputation(dispute.config.rep_cost);
     }
 
     Ok(())

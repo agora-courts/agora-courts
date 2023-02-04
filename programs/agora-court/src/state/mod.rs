@@ -7,5 +7,5 @@ pub mod dispute;
 pub use case::*;
 pub mod case;
 
-pub use reputation::*;
-pub mod reputation;
+pub use voter_record::*;
+pub mod voter_record;

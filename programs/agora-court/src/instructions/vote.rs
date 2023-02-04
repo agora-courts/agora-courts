@@ -14,20 +14,20 @@ pub struct Vote<'info> {
     #[account(
         mut,
         seeds = [b"reputation".as_ref(), court_authority.key().as_ref(), payer.key().as_ref()],
-        bump = reputation.bump,
-        constraint = !reputation.in_dispute(dispute_id)
+        bump = voter_record.bump,
+        constraint = !voter_record.in_dispute(dispute_id)
                     @ InputError::UserAlreadyVoted,
 
-        constraint = !reputation.has_unclaimed_disputes()
+        constraint = !voter_record.has_unclaimed_disputes()
                     @ InputError::UserHasUnclaimedDisputes,
 
-        constraint = reputation.claim_queue.len() < USER_MAX_DISPUTES
+        constraint = voter_record.claim_queue.len() < USER_MAX_DISPUTES
                     @ InputError::UserMaxDisputesReached,
 
-        constraint = reputation.reputation >= dispute.config.tkn_required
+        constraint = voter_record.reputation >= dispute.config.voter_rep_required
                     @ InputError::UserDoesNotHaveEnoughReputation,
     )]
-    pub reputation: Account<'info, Reputation>,
+    pub voter_record: Account<'info, VoterRecord>,
 
     #[account(
         mut,
@@ -56,7 +56,7 @@ pub struct Vote<'info> {
 
 pub fn vote(ctx: Context<Vote>, dispute_id: u64, user_case: Pubkey) -> Result<()> {
     let dispute = &mut ctx.accounts.dispute;
-    let reputation = &mut ctx.accounts.reputation;
+    let voter_record = &mut ctx.accounts.voter_record;
     let case = &mut ctx.accounts.case;
 
     case.votes += 1;
@@ -72,7 +72,7 @@ pub fn vote(ctx: Context<Vote>, dispute_id: u64, user_case: Pubkey) -> Result<()
         dispute_end_time: ctx.accounts.dispute.config.ends_at,
         user: user_case,
     };
-    reputation.claim_queue.push(dispute_record);
+    voter_record.claim_queue.push(dispute_record);
 
     Ok(())
 }

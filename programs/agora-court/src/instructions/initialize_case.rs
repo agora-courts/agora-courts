@@ -36,14 +36,14 @@ pub struct InitializeCase<'info> {
     #[account(
         mut,
         seeds = [b"reputation".as_ref(), court_authority.key().as_ref(), payer.key().as_ref()],
-        bump = reputation.bump,
-        constraint = !reputation.has_unclaimed_disputes()
+        bump = voter_record.bump,
+        constraint = !voter_record.has_unclaimed_disputes()
                     @ InputError::UserHasUnclaimedDisputes,
 
-        constraint = reputation.claim_queue.len() < USER_MAX_DISPUTES
+        constraint = voter_record.claim_queue.len() < USER_MAX_DISPUTES
                     @ InputError::UserMaxDisputesReached,
     )]
-    pub reputation: Account<'info, Reputation>,
+    pub voter_record: Account<'info, VoterRecord>,
 
     #[account(
         mut,
@@ -76,10 +76,10 @@ pub struct InitializeCase<'info> {
 
 pub fn initialize_case(ctx: Context<InitializeCase>, dispute_id: u64, evidence: String) -> Result<()> {
     let dispute = &mut ctx.accounts.dispute;
-    let reputation = &mut ctx.accounts.reputation;
+    let voter_record = &mut ctx.accounts.voter_record;
     
     // Transfer arb_costs to escrow account
-    let amount_to_transfer = dispute.config.arb_cost;
+    let amount_to_transfer = dispute.config.pay_cost;
     let context = CpiContext::new(
         ctx.accounts.token_program.to_account_info(),
         Transfer {
@@ -103,7 +103,7 @@ pub fn initialize_case(ctx: Context<InitializeCase>, dispute_id: u64, evidence: 
         dispute_end_time: dispute.config.ends_at,
         user: ctx.accounts.payer.key(),
     };
-    reputation.claim_queue.push(dispute_record);
+    voter_record.claim_queue.push(dispute_record);
 
     dispute.submitted_cases += 1;
     if dispute.submitted_cases == dispute.users.len() as u64 {
