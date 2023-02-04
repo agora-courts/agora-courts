@@ -38,7 +38,6 @@ pub fn initialize_dispute(
     let dispute = &mut ctx.accounts.dispute;
     let bump = *ctx.bumps.get("dispute").unwrap();
     dispute.set_inner(Dispute {
-        id: ctx.accounts.court.num_disputes,
         users,
         status: DisputeStatus::Waiting,
         submitted_cases: 0,

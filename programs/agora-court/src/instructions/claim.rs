@@ -82,7 +82,7 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
         );
         transfer(context, amount_to_transfer)?;
 
-        reputation.add_reputation(dispute.config.rep_risked);
+        reputation.add_reputation(dispute.config.tkn_risked);
         return Ok(())
     }
 
@@ -106,9 +106,9 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
         );
         transfer(context, amount_to_transfer)?;
 
-        reputation.add_reputation(dispute.config.rep_risked);
+        reputation.add_reputation(dispute.config.tkn_risked);
     } else {
-        reputation.sub_reputation(dispute.config.rep_risked);
+        reputation.sub_reputation(dispute.config.tkn_risked);
     }
 
     Ok(())

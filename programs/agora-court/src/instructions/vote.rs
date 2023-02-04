@@ -24,7 +24,7 @@ pub struct Vote<'info> {
         constraint = reputation.claim_queue.len() < USER_MAX_DISPUTES
                     @ InputError::UserMaxDisputesReached,
 
-        constraint = reputation.reputation >= dispute.config.rep_required
+        constraint = reputation.reputation >= dispute.config.tkn_required
                     @ InputError::UserDoesNotHaveEnoughReputation,
     )]
     pub reputation: Account<'info, Reputation>,
