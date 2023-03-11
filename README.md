@@ -26,5 +26,4 @@ Never bound by geographic borders, settle disputes between anyone, anywhere, at 
 Game theory and cryptoeconomic incentivization is used to encourage unbiased voting. Coherent voters earn token rewards while bad actors are slashed. Our reputation system rewards voters who participate frequently and honestly, unlocking disputes with larger payouts as a user climbs the levels.
 
 ## Design
-
-
+![image](https://user-images.githubusercontent.com/54857388/224514981-7da34d5f-f6bf-4c76-ac1e-fcdfd79d2785.png)
