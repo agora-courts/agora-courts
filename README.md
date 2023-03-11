@@ -1,0 +1,30 @@
+# Agora Courts
+
+![image](https://user-images.githubusercontent.com/54857388/224509430-2cad8da4-2621-4fb4-8ee0-a6a170ab6aeb.png)
+
+Agora enables any protocol to create their own courts, where users can submit disputes, vote on cases, and earn rewards for doing so honestly, in an entirely decentralized manner. To learn more about Agora and how to integrate with your own protocol, read our [documentation](https://docs.agoracourts.com/).
+
+## Project Overview
+### Motivation
+As Web3 grows, so will the amount of online P2P transactions between people from across the globe. With decentralized exchanges becoming the de facto hub for goods, labor, and capital, disputes between different parties are inevitable.
+
+We are already seeing this trend in Web2:
+
+eBay - 60 million marketplace disputes per year\
+Alibaba - 5 million private volunteer jurors arbitrating platform transactions
+
+But dApps don’t have a customer support team on standby ready to deal with every issue. Agora seeks to unlock new user-centric features for protocols in every corner of the ecosystem. We hope to transition the reliability of Web2 arbitration into Web3 to improve how users interact with decentralized applications.
+
+## Primary Features
+### Create Courts
+Different platforms have different needs, so each protocol’s court is unique and highly customizable. Choose which users votes, when they vote, and how much each vote is weighted. Already using a native token? No problem. Easily integrate any token to be used on Agora disputes. 
+
+### Settle Disputes
+Never bound by geographic borders, settle disputes between anyone, anywhere, at anytime. Combine the finality of programmatic smart contracts with the flexibility of subjective decision-making and arbitration. Agora targets cases that traditional arbitration systems cannot, in an entirely decentralized manner.
+
+### Incentivize Honesty
+Game theory and cryptoeconomic incentivization is used to encourage unbiased voting. Coherent voters earn token rewards while bad actors are slashed. Our reputation system rewards voters who participate frequently and honestly, unlocking disputes with larger payouts as a user climbs the levels.
+
+## Design
+
+
