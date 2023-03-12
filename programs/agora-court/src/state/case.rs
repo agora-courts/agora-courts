@@ -9,7 +9,7 @@ pub struct Case {
 }
 
 impl Case {
-    pub fn get_size(evidence: String) -> usize {
+    pub fn get_size(evidence: &String) -> usize {
         DISCRIMINATOR_SIZE + 8 + (4 + evidence.len()) + 1
     }
 }

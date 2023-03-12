@@ -1,15 +1,16 @@
 [features]
-seeds = true
+seeds = false
 skip-lint = false
+
 [programs.devnet]
-agora_court = "7XVbwGZara96w6qiw2VuhaPUAoNQyyVDHxN6sC4YHY3N"
+agora_court = "xmLz8CwRQceUVYdHmPb72xASFE2eYYhsKUcetZbvRd7"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
 cluster = "devnet"
-wallet = "/Users/kevinz/.config/solana/id.json"
+wallet = "/home/vsiva360/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

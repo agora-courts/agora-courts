@@ -34,4 +34,24 @@ pub enum InputError {
     UserMaxDisputesReached,
     #[msg("User cannot claim dispute")]
     UserCannotClaimDispute,
+    #[msg("User already provided their case.")]
+    UserAlreadyProvidedCase,
+    #[msg("The interaction period is over. Users may no longer interact as part of this dispute.")]
+    InteractionPeriodEnded,
+    #[msg("All users have already interacted with this dispute.")]
+    InteractionsFulfilled,
+}
+
+#[error_code]
+pub enum AccountError {
+    #[msg("Reputation token payment was specified, but reputation ATA was not provided.")]
+    ReputationAtaMissing,
+    #[msg("Pay token payment was specified, but either the payment ATA was not provided or the court does not accept a pay token mint.")]
+    PaymentAtaMissing,
+    #[msg("Provided mint account does not match protocol's initialized mint.")]
+    ProtocolMintMismatch,
+    #[msg("Reputation mint does not match mint specified in court.")]
+    ReputationMintMismatch,
+    #[msg("Signer is not authorized by the protocol to interact.")]
+    UserNotAuthorized,
 }

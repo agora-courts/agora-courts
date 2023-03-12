@@ -8,7 +8,7 @@ use crate::tools::anchor::DISCRIMINATOR_SIZE;
 pub struct DisputeRecord {
     pub dispute_id: u64,
     pub dispute_end_time: i64,
-    pub user: Pubkey,
+    pub user_voted_for: Pubkey,
 }
 
 impl Ord for DisputeRecord {
@@ -40,12 +40,14 @@ pub struct VoterRecord {
     // claim_queue represents the disputes that the user
     // is a participant of in descending order of dispute end time.
     pub claim_queue: BinaryHeap<DisputeRecord>,
+    pub currently_staked_rep: u64,
+    pub currently_staked_pay: u64,
     pub bump: u8,
 }
 
 impl VoterRecord {
-    pub fn get_size(max_disputes: usize) -> usize {
-        DISCRIMINATOR_SIZE + (4 + (DisputeRecord::SIZE * max_disputes)) + 1
+    pub fn get_size(max_disputes: u16) -> usize {
+        DISCRIMINATOR_SIZE + (DisputeRecord::SIZE * ((max_disputes as usize) + 1)) + 8 + 8 + 1 //includes single entry overhead, no resize functionality (yet)
     }
 
     pub fn in_dispute(&self, dispute_id: u64) -> bool {
@@ -55,8 +57,10 @@ impl VoterRecord {
     }
 
     pub fn has_unclaimed_disputes(&self) -> bool {
-        self.claim_queue.peek().is_none()
-            || self.claim_queue.peek().unwrap().dispute_end_time
-                < Clock::get().unwrap().unix_timestamp
+        if let Some(record) = self.claim_queue.peek() {
+            record.dispute_end_time < Clock::get().unwrap().unix_timestamp 
+        } else {
+            false
+        }
     }
 }
