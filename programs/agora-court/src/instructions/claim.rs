@@ -24,7 +24,7 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
     let voter_record = &mut ctx.accounts.voter_record;
 
     let _payer = &mut ctx.accounts.user;
-    let _involved_with = voter_record.claim_queue.pop().unwrap().user_voted_for;
+    let _involved_with = voter_record.pop().unwrap().user_voted_for;
 
     let mut rep_amount_to_transfer = dispute.config.rep_cost;
     let mut pay_amount_to_transfer = dispute.config.pay_cost;
@@ -43,7 +43,7 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
                 rep_amount_to_transfer = (((dispute.submitted_cases as u64 - 1) * dispute.config.rep_cost) + dispute.config.protocol_rep + (dispute.votes * dispute.config.voter_rep_cost)) / dispute.leader.votes;
                 pay_amount_to_transfer = (((dispute.submitted_cases as u64 - 1) * dispute.config.pay_cost) + dispute.config.protocol_pay) / dispute.leader.votes;
 
-                voter_record.currently_staked_pay -= dispute.config.voter_rep_cost;
+                voter_record.currently_staked_rep -= dispute.config.voter_rep_cost;
             } else {
                 //losing voter -= voter_record
                 voter_record.currently_staked_rep -= dispute.config.voter_rep_cost;
@@ -128,7 +128,7 @@ pub struct Claim<'info> {
         bump = voter_record.bump,
         constraint = voter_record.has_unclaimed_disputes()
                     @ InputError::UserHasNoUnclaimedDisputes,
-        constraint = voter_record.claim_queue.peek().unwrap().dispute_id == _dispute_id
+        constraint = voter_record.peek().unwrap().dispute_id == _dispute_id
                     @ InputError::UserCannotClaimDispute,
     )]
     pub voter_record: Box<Account<'info, VoterRecord>>,

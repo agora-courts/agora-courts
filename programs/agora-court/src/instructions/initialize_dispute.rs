@@ -100,7 +100,7 @@ pub fn initialize_dispute(
 pub struct InitializeDispute<'info> {
     #[account(
         init,
-        seeds = ["dispute".as_bytes(), court.key().as_ref(), u64::to_ne_bytes(court.num_disputes).as_ref()],
+        seeds = ["dispute".as_bytes(), court.key().as_ref(), court.num_disputes.to_be_bytes().as_ref()],
         bump,
         payer = protocol,
         space = Dispute::get_size(&users)

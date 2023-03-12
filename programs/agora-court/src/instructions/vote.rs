@@ -86,7 +86,7 @@ pub struct Vote<'info> {
 
     #[account(
         mut,
-        seeds = ["dispute".as_bytes(), court.key().as_ref(), u64::to_ne_bytes(dispute_id).as_ref()],
+        seeds = ["dispute".as_bytes(), court.key().as_ref(), dispute_id.to_be_bytes().as_ref()],
         bump = dispute.bump,
    )]
     pub dispute: Account<'info, Dispute>,

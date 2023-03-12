@@ -130,7 +130,7 @@ pub fn interact(
 pub struct Interact<'info> {
     #[account(
         mut,
-        seeds = ["dispute".as_bytes(), court.key().as_ref(), u64::to_ne_bytes(_dispute_id).as_ref()],
+        seeds = ["dispute".as_bytes(), court.key().as_ref(), _dispute_id.to_be_bytes().as_ref()],
         bump = dispute.bump,
     )]
     pub dispute: Box<Account<'info, Dispute>>,

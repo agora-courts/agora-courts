@@ -30,7 +30,7 @@ pub fn initialize_case(ctx: Context<InitializeCase>, dispute_id: u64, evidence: 
         dispute_end_time: dispute.config.ends_at,
         user_voted_for: ctx.accounts.payer.key() //your own "case" - prevents voting for yourself
     };
-    voter_record.claim_queue.push(dispute_record);
+    voter_record.push(dispute_record);
 
     //inc cases
     //See interact.rs WARNING comment. same issue here if there is a None in the vector
@@ -77,7 +77,7 @@ pub struct InitializeCase<'info> {
     //checks case timing and user involvement
     #[account(
         mut,
-        seeds = ["dispute".as_bytes(), court.key().as_ref(), u64::to_ne_bytes(dispute_id).as_ref()],
+        seeds = ["dispute".as_bytes(), court.key().as_ref(), dispute_id.to_be_bytes().as_ref()],
         bump = dispute.bump,
         constraint = dispute.users.contains(&Some(payer.key()))
                     @ InputError::UserDoesNotHaveCase,

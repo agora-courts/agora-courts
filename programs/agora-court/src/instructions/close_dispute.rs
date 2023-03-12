@@ -11,11 +11,11 @@ pub fn close_dispute(
 }
 
 #[derive(Accounts)]
-#[instruction(dispute_id: u64)]
+#[instruction(_dispute_id: u64)]
 pub struct CloseDispute<'info> {
     #[account(
         mut,
-        seeds = ["dispute".as_bytes(), court.key().as_ref(), u64::to_ne_bytes(dispute_id).as_ref()],
+        seeds = ["dispute".as_bytes(), court.key().as_ref(), _dispute_id.to_be_bytes().as_ref()],
         bump = dispute.bump,
     )]
     pub dispute: Account<'info, Dispute>,

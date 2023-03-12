@@ -7,7 +7,7 @@ pub mod instructions;
 pub mod state;
 pub mod tools;
 
-declare_id!("xmLz8CwRQceUVYdHmPb72xASFE2eYYhsKUcetZbvRd7");
+declare_id!("Benri2piS4b4h5S54uaMRybuhhZtbM4L3zofhd3Y9FXv");
 
 #[program]
 pub mod agora_court {

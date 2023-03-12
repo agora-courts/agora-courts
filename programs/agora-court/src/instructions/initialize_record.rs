@@ -1,4 +1,4 @@
-use std::collections::BinaryHeap;
+//use std::collections::BinaryHeap;
 use crate::state::{VoterRecord, Court};
 use anchor_lang::prelude::*;
 
@@ -6,7 +6,7 @@ pub fn initialize_record(ctx: Context<InitializeRecord>) -> Result<()> {
     let reputation = &mut ctx.accounts.record;
     let bump = *ctx.bumps.get("record").unwrap();
     reputation.set_inner(VoterRecord {
-        claim_queue: BinaryHeap::with_capacity(ctx.accounts.court.max_dispute_votes as usize),
+        claim_queue: Vec::new(),
         currently_staked_rep: 0,
         currently_staked_pay: 0,
         bump,
