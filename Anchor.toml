@@ -4,6 +4,7 @@ skip-lint = false
 
 [programs.devnet]
 agora_court = "Benri2piS4b4h5S54uaMRybuhhZtbM4L3zofhd3Y9FXv"
+demo_tokens = "6dbHUd6N5iE8pYKsZAxuwXpjTguM46T6EYJgebuCfHXc"
 
 [registry]
 url = "https://anchor.projectserum.com"
