@@ -11,6 +11,7 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID,
     getAssociatedTokenAddress,
     getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
+import { mintAuthority, repMint } from "./utils"
 
 describe('agora-court', () => {
     //find the provider and set the anchor provider
@@ -25,9 +26,8 @@ describe('agora-court', () => {
 
     //test specific information
     const decimals = 9;
-    //define mintAuth and repMint
-    console.log("mint auth: ", mintAuthority.publicKey.toString()); //4TmoWRpnymwf
-    console.log("repmint: ", repMint.publicKey.toString()); //Aigi9pBudYLmNi
+    console.log("mint auth: ", mintAuthority.publicKey.toString());
+    console.log("repmint: ", repMint.publicKey.toString());
 
     it('initialize_dispute!', async () => {
         //signer is just the wallet
