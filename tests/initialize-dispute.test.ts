@@ -123,6 +123,7 @@ describe('agora-court', () => {
                 repVault: rep_vault_ata,
                 payVault: agoraProgram.programId,
                 court: courtPDA,
+                payer: signer.publicKey,
                 protocol: signer.publicKey,
                 protocolPayAta: agoraProgram.programId,
                 protocolRepAta: fromATA,

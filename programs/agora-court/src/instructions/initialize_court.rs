@@ -28,10 +28,13 @@ pub struct InitializeCourt<'info> {
         init,
         seeds = ["court".as_bytes(), protocol.key().as_ref()],
         bump,
-        payer = protocol,
+        payer = payer,
         space = Court::SIZE
     )]
     pub court: Account<'info, Court>,
+
+    #[account(mut)]
+    pub payer: Signer<'info>,
 
     #[account(mut)]
     pub protocol: Signer<'info>, // protocol that makes CPI, has to sign for all future init_disputes too!

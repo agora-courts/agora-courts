@@ -2,19 +2,16 @@ use anchor_lang::prelude::*;
 use agora_court::cpi::accounts::{InitializeCourt, InitializeDispute};
 use agora_court::program::AgoraCourt;
 use agora_court::state::DisputeConfiguration;
-use agora_court;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
-declare_id!("6dbHUd6N5iE8pYKsZAxuwXpjTguM46T6EYJgebuCfHXc");
+declare_id!("8oxb3Kg4kda7LCJoSUVHAZhoqWjmBiLnGZeCyUkJJ22L");
 
 #[program]
 pub mod demo_tokens {
-    use anchor_spl::token::MintTo;
-
     use super::*;
 
-    pub fn create_court(ctx: Context<CreateCourt>) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
         //calls init_court
         let prot = &mut ctx.accounts.protocol;
         let bump = *ctx.bumps.get("protocol").unwrap();
@@ -23,24 +20,39 @@ pub mod demo_tokens {
             num_tickers: 0
         });
 
-        let seeds: &[&[&[u8]]] = &[
-            &[
-                "protocol".as_bytes(),
-                &[bump]
-            ]
-        ];
-
-        let cpi_ctx = CpiContext::new_with_signer(
-            ctx.accounts.agora_program.to_account_info(),
-            InitializeCourt {
-                court: ctx.accounts.court_pda.to_account_info(),
-                protocol: ctx.accounts.protocol.to_account_info(),
-                system_program: ctx.accounts.system_program.to_account_info(),
-            },
-            seeds
+        let transfer_cpi = CpiContext::new(
+            ctx.accounts.system_program.to_account_info(),
+            anchor_lang::system_program::Transfer {
+                from: ctx.accounts.payer.to_account_info(),
+                to: ctx.accounts.protocol.to_account_info(),
+            }
         );
+        anchor_lang::system_program::transfer(transfer_cpi, 1*anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL)
+    }
 
-        agora_court::cpi::initialize_court(cpi_ctx, ctx.accounts.rep_mint.key(), None, 10)
+    pub fn create_court(ctx: Context<CreateCourt>) -> Result<()> {
+        let max_votes: u16 = 10;
+
+        agora_court::cpi::initialize_court(
+            CpiContext::new_with_signer(
+                ctx.accounts.agora_program.to_account_info(),
+                InitializeCourt {
+                    court: ctx.accounts.court_pda.to_account_info(),
+                    payer: ctx.accounts.payer.to_account_info(),
+                    protocol: ctx.accounts.protocol.to_account_info(),
+                    system_program: ctx.accounts.system_program.to_account_info(),
+                },
+                &[
+                    &[
+                        "protocol".as_bytes(),
+                        &[ctx.accounts.protocol.bump]
+                    ]
+                ]
+            ), 
+            ctx.accounts.rep_mint.key(), 
+            None, 
+            max_votes
+        )
     }
 
     pub fn submit_token(
@@ -77,6 +89,7 @@ pub mod demo_tokens {
                 rep_vault: ctx.accounts.rep_vault.to_account_info(),
                 pay_vault: None,
                 court: ctx.accounts.court_pda.to_account_info(),
+                payer: ctx.accounts.payer.to_account_info(),
                 protocol: ctx.accounts.protocol.to_account_info(), //payer
                 protocol_pay_ata: None,
                 protocol_rep_ata: Some(ctx.accounts.protocol_rep_ata.to_account_info()),
@@ -121,7 +134,7 @@ pub mod demo_tokens {
 
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
-            MintTo {
+            anchor_spl::token::MintTo {
                 mint: ctx.accounts.rep_mint.to_account_info(),
                 to: ctx.accounts.token_acc.to_account_info(),
                 authority: ctx.accounts.protocol.to_account_info()
@@ -137,7 +150,7 @@ pub mod demo_tokens {
 }
 
 #[account]
-pub struct Protocol { //protocol
+pub struct Protocol {
     pub bump: u8,
     pub num_tickers: u8,
 }
@@ -164,12 +177,12 @@ impl Ticker {
 }
 
 #[derive(Accounts)]
-pub struct CreateCourt<'info> {
+pub struct Initialize<'info> {
     #[account(
         init,
-        seeds = ["protocol".as_bytes()], bump,
-        space = 8 + 1,
         payer = payer,
+        space = 8 + 1 + 1,
+        seeds = ["protocol".as_bytes()], bump,
     )]
     pub protocol: Account<'info, Protocol>,
 
@@ -183,12 +196,35 @@ pub struct CreateCourt<'info> {
     )]
     pub rep_mint: Account<'info, Mint>,
 
-    ///CHECK: Agora Court will check this for us
+    #[account(mut)]
+    pub payer: Signer<'info>, //literally just pays for init
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct CreateCourt<'info> {
+    #[account(
+        mut,
+        seeds = ["protocol".as_bytes()], bump = protocol.bump,
+    )]
+    pub protocol: Account<'info, Protocol>,
+
+    #[account(
+        mut,
+        seeds = ["rep_mint".as_bytes()], bump
+    )]
+    pub rep_mint: Account<'info, Mint>,
+    ///CHECK: Agora Court will check this for us - next thing to change
+    #[account(mut)]
     pub court_pda: UncheckedAccount<'info>,
 
     #[account(mut)]
     pub payer: Signer<'info>, //literally just pays for init
 
+    #[account(
+        executable,
+    )]
     pub agora_program: Program<'info, AgoraCourt>,
 
     pub token_program: Program<'info, Token>,

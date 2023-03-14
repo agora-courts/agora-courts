@@ -85,6 +85,7 @@ describe('agora-court', () => {
             )
             .accounts({
                 court: courtPDA,
+                payer: signer.publicKey,
                 protocol: signer.publicKey,
                 systemProgram: SystemProgram.programId,
             })
@@ -93,18 +94,8 @@ describe('agora-court', () => {
         
         await provider.sendAndConfirm(tx, [mintAuthority, repMint]);
         
-        // await signer.signTransaction(tx);
-        // await connection.sendRawTransaction(tx.serialize());
-        // const latestBlockHash = await connection.getLatestBlockhash();
-      
-        // await connection.confirmTransaction({
-        //     blockhash: latestBlockHash.blockhash,
-        //     lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-        //     signature: signature,
-        // });
-
         console.log("rep_mint: ", repMint.publicKey.toString());
-        //console.log("rep_mint_buffer: ", repMint.publicKey.toBuffer());
+
         console.log("court: ", courtPDA.toString());
 
         let courtState = await agoraProgram.account.court.fetch(courtPDA);

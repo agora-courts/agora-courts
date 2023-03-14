@@ -102,14 +102,14 @@ pub struct InitializeDispute<'info> {
         init,
         seeds = ["dispute".as_bytes(), court.key().as_ref(), court.num_disputes.to_be_bytes().as_ref()],
         bump,
-        payer = protocol,
+        payer = payer,
         space = Dispute::get_size(&users)
     )]
     pub dispute: Box<Account<'info, Dispute>>,
 
     #[account(
         init_if_needed,
-        payer = protocol,
+        payer = payer,
         associated_token::mint = rep_mint,
         associated_token::authority = dispute
     )]
@@ -117,7 +117,7 @@ pub struct InitializeDispute<'info> {
 
     #[account(
         init_if_needed,
-        payer = protocol,
+        payer = payer,
         associated_token::mint = pay_mint,
         associated_token::authority = dispute
     )]
@@ -125,10 +125,13 @@ pub struct InitializeDispute<'info> {
 
     #[account(
         mut,
-        seeds = ["court".as_bytes(), protocol.key().as_ref()],
+        seeds = ["court".as_bytes(), payer.key().as_ref()],
         bump = court.bump,
     )]
     pub court: Box<Account<'info, Court>>,
+
+    #[account(mut)]
+    pub payer: Signer<'info>, //payer may be the same as protocol, but not when PDA
 
     #[account(mut)]
     pub protocol: Signer<'info>, // protocol that makes CPI needs to sign again
