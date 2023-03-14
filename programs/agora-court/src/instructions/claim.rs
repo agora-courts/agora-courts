@@ -1,4 +1,3 @@
-use crate::error::AccountError;
 use crate::{error::InputError, state::*};
 use anchor_lang::prelude::*;
 
@@ -87,7 +86,7 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
             transfer(cpi_ctx, rep_amount_to_transfer)?;
             voter_record.currently_staked_rep -= rep_amount_to_transfer;
         } else {
-            return err!(AccountError::ReputationAtaMissing);
+            return err!(InputError::ReputationAtaMissing);
         }
     }
 
@@ -96,7 +95,7 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
         let vault_ata = &mut ctx.accounts.pay_vault;
 
         if let (Some(user_acc), Some(vault_acc), Some(mint), Some(mint_acc)) = (user_ata, vault_ata, &ctx.accounts.court.pay_mint, &ctx.accounts.pay_mint) {
-            require!(mint_acc.key() == *mint, AccountError::ProtocolMintMismatch);
+            require!(mint_acc.key() == *mint, InputError::ProtocolMintMismatch);
 
             let cpi_ctx = CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
@@ -111,7 +110,7 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
             transfer(cpi_ctx, pay_amount_to_transfer)?;
             voter_record.currently_staked_pay -= pay_amount_to_transfer;
         } else {
-            return err!(AccountError::PaymentAtaMissing);
+            return err!(InputError::PaymentAtaMissing);
         }
     }
 
@@ -183,7 +182,7 @@ pub struct Claim<'info> {
     pub user_rep_ata: Option<Account<'info, TokenAccount>>,
 
     #[account(
-        constraint = rep_mint.key() == court.rep_mint @ AccountError::ReputationMintMismatch
+        constraint = rep_mint.key() == court.rep_mint @ InputError::ReputationMintMismatch
     )]
     pub rep_mint: Box<Account<'info, Mint>>,
 

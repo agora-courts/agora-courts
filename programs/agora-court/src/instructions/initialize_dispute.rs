@@ -1,4 +1,4 @@
-use crate::{error::{InputError, AccountError}, state::dispute::*, state::court::Court};
+use crate::{error::{InputError}, state::dispute::*, state::court::Court};
 use anchor_lang::prelude::*;
 use anchor_spl::{token::{Mint, TokenAccount, transfer, Token}, associated_token::AssociatedToken};
 
@@ -35,7 +35,7 @@ pub fn initialize_dispute(
     let bump = *ctx.bumps.get("dispute").unwrap();
     dispute.set_inner(Dispute {
         users,
-        status: DisputeStatus::Waiting,
+        status: DisputeStatus::Grace,
         interactions: 0,
         submitted_cases: 0,
         votes: 0,
@@ -64,7 +64,7 @@ pub fn initialize_dispute(
     
             transfer(cpi_ctx, provided_rep)?;
         } else {
-            return err!(AccountError::ReputationAtaMissing);
+            return err!(InputError::ReputationAtaMissing);
         }
     }
 
@@ -74,7 +74,7 @@ pub fn initialize_dispute(
         let vault_ata = &mut ctx.accounts.pay_vault;
 
         if let (Some(protocol_acc), Some(vault_acc), Some(mint), Some(mint_acc)) = (protocol_ata, vault_ata, &ctx.accounts.court.pay_mint, &ctx.accounts.pay_mint) {
-            require!(mint_acc.key() == *mint, AccountError::ProtocolMintMismatch);
+            require!(mint_acc.key() == *mint, InputError::ProtocolMintMismatch);
             
             let cpi_ctx = CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
@@ -87,7 +87,7 @@ pub fn initialize_dispute(
 
             transfer(cpi_ctx, provided_pay)?;
         } else {
-            return err!(AccountError::PaymentAtaMissing);
+            return err!(InputError::PaymentAtaMissing);
         }
     }
 
@@ -148,7 +148,7 @@ pub struct InitializeDispute<'info> {
     pub protocol_rep_ata: Option<Account<'info, TokenAccount>>,
 
     #[account(
-        constraint = rep_mint.key() == court.rep_mint @ AccountError::ReputationMintMismatch
+        constraint = rep_mint.key() == court.rep_mint @ InputError::ReputationMintMismatch
     )]
     pub rep_mint: Box<Account<'info, Mint>>,
 

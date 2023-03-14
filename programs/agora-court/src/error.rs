@@ -40,10 +40,6 @@ pub enum InputError {
     InteractionPeriodEnded,
     #[msg("All users have already interacted with this dispute.")]
     InteractionsFulfilled,
-}
-
-#[error_code]
-pub enum AccountError {
     #[msg("Reputation token payment was specified, but reputation ATA was not provided.")]
     ReputationAtaMissing,
     #[msg("Pay token payment was specified, but either the payment ATA was not provided or the court does not accept a pay token mint.")]

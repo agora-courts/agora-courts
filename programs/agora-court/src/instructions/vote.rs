@@ -1,4 +1,4 @@
-use crate::{error::{InputError, AccountError}, state::dispute::*, state::case::*, state::voter_record::*, state::court::*};
+use crate::{error::{InputError}, state::dispute::*, state::case::*, state::voter_record::*, state::court::*};
 use anchor_lang::prelude::*;
 use anchor_spl::{token::{Token, Mint, TokenAccount, self}, associated_token::AssociatedToken};
 
@@ -118,7 +118,7 @@ pub struct Vote<'info> {
     pub user_rep_ata: Account<'info, TokenAccount>,
 
     #[account(
-        constraint = rep_mint.key() == court.rep_mint @ AccountError::ReputationMintMismatch
+        constraint = rep_mint.key() == court.rep_mint @ InputError::ReputationMintMismatch
     )]
     pub rep_mint: Account<'info, Mint>,
 

@@ -14,6 +14,7 @@ wallet = "/home/vsiva360/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
-initializecourt = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/initialize-court.test.ts"
-initializedispute = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/initialize-dispute.test.ts"
+initcourt = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/initialize-court.test.ts"
+initdispute = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/initialize-dispute.test.ts"
+initrecord = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/initialize-record.test.ts"
 lint = "cargo dylint --all --workspace"

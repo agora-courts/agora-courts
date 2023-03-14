@@ -1,4 +1,4 @@
-use crate::{error::{InputError, AccountError}, state::dispute::*, state::{court::Court, voter_record::VoterRecord}};
+use crate::{error::{InputError}, state::dispute::*, state::{court::Court, voter_record::VoterRecord}};
 use anchor_lang::prelude::*;
 use anchor_spl::{token::{Mint, TokenAccount, transfer, Token, Transfer}, associated_token::AssociatedToken};
 
@@ -48,7 +48,7 @@ pub fn interact(
     
     //based on none or some, do transfer / return err
     if idx.is_none() {
-        return err!(AccountError::UserNotAuthorized);
+        return err!(InputError::UserNotAuthorized);
     }
 
     let i = idx.unwrap();
@@ -77,7 +77,7 @@ pub fn interact(
             transfer(cpi_ctx, provided_rep)?;
             ctx.accounts.record.currently_staked_rep += provided_rep;
         } else {
-            return err!(AccountError::ReputationAtaMissing);
+            return err!(InputError::ReputationAtaMissing);
         }
     }
 
@@ -87,7 +87,7 @@ pub fn interact(
         let vault_ata = &mut ctx.accounts.pay_vault;
 
         if let (Some(user_acc), Some(vault_acc), Some(mint), Some(mint_acc)) = (user_ata, vault_ata, ctx.accounts.court.pay_mint, &ctx.accounts.pay_mint) {
-            require!(mint_acc.key() == mint, AccountError::ProtocolMintMismatch);
+            require!(mint_acc.key() == mint, InputError::ProtocolMintMismatch);
 
             let cpi_ctx = CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
@@ -101,7 +101,7 @@ pub fn interact(
             transfer(cpi_ctx, provided_pay)?;
             ctx.accounts.record.currently_staked_pay += provided_pay;
         } else {
-            return err!(AccountError::PaymentAtaMissing);
+            return err!(InputError::PaymentAtaMissing);
         }
     }
 
@@ -183,7 +183,7 @@ pub struct Interact<'info> {
     pub user_rep_ata: Option<Account<'info, TokenAccount>>,
 
     #[account(
-        constraint = rep_mint.key() == court.rep_mint @ AccountError::ReputationMintMismatch
+        constraint = rep_mint.key() == court.rep_mint @ InputError::ReputationMintMismatch
     )]
     pub rep_mint: Account<'info, Mint>,
 
