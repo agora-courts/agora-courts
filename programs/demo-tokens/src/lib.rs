@@ -267,15 +267,19 @@ pub struct Submit<'info> {
     pub ticker_acc: Account<'info, Ticker>,
 
     ///CHECK: Agora Court will check this for us
+    #[account(mut)]
     pub court_pda: UncheckedAccount<'info>,
 
     ///CHECK: Agora Court will check this for us
+    #[account(mut)]
     pub dispute_pda: UncheckedAccount<'info>,
 
     ///CHECK: Agora Court will check this for us
+    #[account(mut)]
     pub rep_vault: UncheckedAccount<'info>,
 
     ///CHECK: Agora Court will check this for us
+    #[account(mut)]
     pub protocol_rep_ata: UncheckedAccount<'info>,
 
     #[account(mut)]

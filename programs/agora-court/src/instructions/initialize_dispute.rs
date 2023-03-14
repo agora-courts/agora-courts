@@ -125,7 +125,7 @@ pub struct InitializeDispute<'info> {
 
     #[account(
         mut,
-        seeds = ["court".as_bytes(), payer.key().as_ref()],
+        seeds = ["court".as_bytes(), protocol.key().as_ref()],
         bump = court.bump,
     )]
     pub court: Box<Account<'info, Court>>,

@@ -2,7 +2,7 @@ import * as anchor from '@coral-xyz/anchor';
 import { Program } from '@coral-xyz/anchor';
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Keypair, Transaction, Connection, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { expect } from 'chai';
-import { AgoraCourt } from '../target/types/agora_court';
+import { AgoraCourt } from '../../target/types/agora_court';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, 
     createAssociatedTokenAccount, 
     createAssociatedTokenAccountInstruction, 
@@ -25,8 +25,7 @@ describe('agora-court', () => {
 
     //test specific information
     const decimals = 9;
-    const mintAuthority = Keypair.fromSecretKey();
-    const repMint = Keypair.fromSecretKey();
+    //define mintAuth and repMint
     console.log("mint auth: ", mintAuthority.publicKey.toString()); //4TmoWRpnymwf
     console.log("repmint: ", repMint.publicKey.toString()); //Aigi9pBudYLmNi
 

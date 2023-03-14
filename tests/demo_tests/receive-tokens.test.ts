@@ -2,7 +2,7 @@ import * as anchor from '@coral-xyz/anchor';
 import { Program } from '@coral-xyz/anchor';
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Keypair, Transaction, Connection, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { expect } from 'chai';
-import { AgoraCourt } from '../target/types/agora_court';
+import { AgoraCourt } from '../../target/types/agora_court';
 import { TOKEN_PROGRAM_ID, 
     createInitializeMint2Instruction,
     createInitializeMintInstruction,
@@ -12,7 +12,7 @@ import { TOKEN_PROGRAM_ID,
     ASSOCIATED_TOKEN_PROGRAM_ID,
     createAssociatedTokenAccountInstruction
 } from "@solana/spl-token";
-import { DemoTokens } from '../target/types/demo_tokens';
+import { DemoTokens } from '../../target/types/demo_tokens';
 
 describe('agora-court', () => {
     //find the provider and set the anchor provider
@@ -90,6 +90,6 @@ describe('agora-court', () => {
         console.log("rep_mint: ", repMintPDA.toString());
         console.log("protocol: ", protocolPDA.toString());
 
-        console.log("ata: ", )
+        console.log("ata: ", ATA.toString())
     });
 });
