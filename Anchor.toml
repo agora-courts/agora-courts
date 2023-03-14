@@ -20,4 +20,6 @@ initdispute = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/initialize-
 initrecord = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/initialize-record.test.ts"
 createcourt = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/create-court.test.ts"
 demoinit = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/demo-initialize.test.ts"
+freetoken = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/receive-tokens.test.ts"
+subtoken = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/submit-token.test.ts"
 lint = "cargo dylint --all --workspace"

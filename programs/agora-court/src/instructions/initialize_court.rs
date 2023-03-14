@@ -1,7 +1,7 @@
 use crate::{state::*};
 use anchor_lang::prelude::*;
 
-//make pay mint Option -> rep mint is required
+//First IX a protocol would invoke
 
 pub fn initialize_court(
     ctx: Context<InitializeCourt>, 

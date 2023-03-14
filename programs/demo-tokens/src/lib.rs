@@ -7,6 +7,13 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 
 declare_id!("8oxb3Kg4kda7LCJoSUVHAZhoqWjmBiLnGZeCyUkJJ22L");
 
+//This contract is part of the Agora Tokens Demo, which provides one implementation of Agora Court. 
+//Note that this is the simplest way to create a functional dispute. Tokens are minted to anyone,
+//and this contract simply creates disputes with some parameters. It stores some external information
+//about each dispute, but it does not have any other functionality.
+//Ideally, we recommend that each interact and initialize_dispute instruction is carried out through a CPI from a protocol's contract.
+//Other instructions can be invoked directly through Agora Court. 
+
 #[program]
 pub mod demo_tokens {
     use super::*;
@@ -64,9 +71,7 @@ pub mod demo_tokens {
         description: String,
         badges: Vec<String>,
     ) -> Result<()> {
-        //calls init dispute
-        //calls interact for the user
-        //ensure protocol acc has enough SOL when calling
+        //calls init dispute and creates Ticker account
 
         ctx.accounts.protocol.num_tickers += 1;
 
@@ -90,7 +95,7 @@ pub mod demo_tokens {
                 pay_vault: None,
                 court: ctx.accounts.court_pda.to_account_info(),
                 payer: ctx.accounts.payer.to_account_info(),
-                protocol: ctx.accounts.protocol.to_account_info(), //payer
+                protocol: ctx.accounts.protocol.to_account_info(),
                 protocol_pay_ata: None,
                 protocol_rep_ata: Some(ctx.accounts.protocol_rep_ata.to_account_info()),
                 rep_mint: ctx.accounts.rep_mint.to_account_info(),
@@ -124,7 +129,6 @@ pub mod demo_tokens {
 
     pub fn receive_tokens(ctx: Context<ReceiveTokens>) -> Result<()> {
         //simply mint 150 tokens to any user for demo
-
         let seeds: &[&[&[u8]]] = &[
             &[
                 "protocol".as_bytes(),
