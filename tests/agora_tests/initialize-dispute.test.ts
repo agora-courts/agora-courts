@@ -11,7 +11,7 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID,
     getAssociatedTokenAddress,
     getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
-import { mintAuthority, repMint } from "./utils"
+import { mintAuthority, repMint, decimals } from "./config"
 
 describe('agora-court', () => {
     //find the provider and set the anchor provider
@@ -25,7 +25,6 @@ describe('agora-court', () => {
     const agoraProvider = agoraProgram.provider as anchor.AnchorProvider;
 
     //test specific information
-    const decimals = 9;
     console.log("mint auth: ", mintAuthority.publicKey.toString());
     console.log("repmint: ", repMint.publicKey.toString());
 
@@ -45,6 +44,7 @@ describe('agora-court', () => {
             );
         
         let courtState = await agoraProgram.account.court.fetch(courtPDA);
+        console.log("dispute ID: ", courtState.numDisputes);
 
         const [disputePDA, ] = PublicKey
             .findProgramAddressSync(

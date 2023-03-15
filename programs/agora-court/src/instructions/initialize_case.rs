@@ -70,7 +70,7 @@ pub struct InitializeCase<'info> {
                     @ InputError::UserHasUnclaimedDisputes,
         constraint = voter_record.claim_queue.len() < court.max_dispute_votes as usize
                     @ InputError::UserMaxDisputesReached,
-        constraint = voter_record.in_dispute(dispute_id) @ InputError::UserAlreadyProvidedCase
+        constraint = !voter_record.in_dispute(dispute_id) @ InputError::UserAlreadyProvidedCase
     )]
     pub voter_record: Account<'info, VoterRecord>,
 

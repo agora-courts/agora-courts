@@ -11,7 +11,7 @@ import { TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { DemoTokens } from '../../target/types/demo_tokens';
 
-describe('agora-court', () => {
+describe('demo-court', () => {
     //find the provider and set the anchor provider
     const provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
@@ -24,7 +24,7 @@ describe('agora-court', () => {
 
     //test specific information
 
-    it('create_court!', async () => {
+    it('demo_initialize_accounts!', async () => {
         //signer is just the wallet
         const signer = demoProvider.wallet;
 

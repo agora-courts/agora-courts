@@ -11,6 +11,7 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID,
     getAssociatedTokenAddress,
     getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
+import { disputeId, user } from "./config"
 
 describe('agora-court', () => {
     //find the provider and set the anchor provider
@@ -24,24 +25,12 @@ describe('agora-court', () => {
     const agoraProvider = agoraProgram.provider as anchor.AnchorProvider;
 
     //test specific information
-    const decimals = 9;
-    const user_one = Keypair.generate(); //dummy user
-    console.log("New user secret: ", user_one.secretKey.toString());
 
-    it('init_user_one!', async () => {
+    it('init_case!', async () => {
         //signer is just the wallet
         const signer = agoraProvider.wallet;
 
-        const airdropSignature = await connection.requestAirdrop(
-            user_one.publicKey,
-            1*LAMPORTS_PER_SOL,
-        );
-        const latestBlockHash = await connection.getLatestBlockhash();
-        await connection.confirmTransaction({
-            blockhash: latestBlockHash.blockhash,
-            lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-            signature: airdropSignature,
-        });
+        let tx = new Transaction();
 
         const [courtPDA, ] = PublicKey
             .findProgramAddressSync(
@@ -51,37 +40,63 @@ describe('agora-court', () => {
                 ],
                 agoraProgram.programId
             );
-        
-        const [recordPDA, recordBump] = PublicKey
+
+        const [disputePDA, ] = PublicKey
+            .findProgramAddressSync(
+                [
+                    anchor.utils.bytes.utf8.encode("dispute"),
+                    courtPDA.toBuffer(),
+                    disputeId.toArrayLike(Buffer, "be", 8),
+                ],
+                agoraProgram.programId
+            );
+
+        const [recordPDA, ] = PublicKey
             .findProgramAddressSync(
                 [
                     anchor.utils.bytes.utf8.encode("record"),
                     courtPDA.toBuffer(),
-                    user_one.publicKey.toBuffer()
+                    user.publicKey.toBuffer()
+                ],
+                agoraProgram.programId
+            );
+
+        const [casePDA, ] = PublicKey
+            .findProgramAddressSync(
+                [
+                    anchor.utils.bytes.utf8.encode("case"),
+                    disputePDA.toBuffer(),
+                    user.publicKey.toBuffer()
                 ],
                 agoraProgram.programId
             );
 
         await agoraProgram.methods
-            .initializeRecord(
-
+            .initializeCase(
+                disputeId,
+                "I did not do it, please trust me guys."
             )
             .accounts({
-                record: recordPDA,
+                case: casePDA,
+                voterRecord: recordPDA,
+                dispute: disputePDA,
                 court: courtPDA,
                 courtAuthority: signer.publicKey,
-                payer: user_one.publicKey,
+                payer: user.publicKey,
                 systemProgram: SystemProgram.programId
             })
             .signers(
-                [user_one]
+                [user]
             )
             .rpc();
 
+        let caseState = await agoraProgram.account.case.fetch(casePDA);
         let recordState = await agoraProgram.account.voterRecord.fetch(recordPDA);
-        console.log("pubkey: ", recordPDA);
-        console.log("Record: ", recordState.claimQueue);
-        console.log("currently staked rep/pay: ", recordState.currentlyStakedPay.toString(), " ", recordState.currentlyStakedRep.toString());
-        expect(recordBump).to.equal(recordState.bump);
+        let disputeState = await agoraProgram.account.dispute.fetch(disputePDA);
+
+        console.log("Involved disputes: ", recordState.claimQueue);
+        console.log("case evidence: ", caseState.evidence.toString());
+        console.log("dispute #: ", disputeState.submittedCases.toString());
+        console.log("dispute status: ", disputeState.status);
     });
 });
