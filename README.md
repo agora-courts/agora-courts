@@ -27,3 +27,8 @@ Game theory and cryptoeconomic incentivization is used to encourage unbiased vot
 
 ## Design
 ![image](https://user-images.githubusercontent.com/54857388/224514981-7da34d5f-f6bf-4c76-ac1e-fcdfd79d2785.png)
+
+## Watch Agora In Action
+[Agora Tokens](https://github.com/IlliniBlockchain/agora-tokens) is an open and decentralized curated registry of tokens. It is a community-managed list of Solana tokens open to any project and curated through the power of Agora arbitration and economic incentives.
+
+Anyone can submit a token and its information along with a deposit. The submission is then placed in a challenge period. If no one challenges it, it is automatically placed in the token list. Otherwise, an Agora court jury will vote to determine whether to include or reject the listing. Further attributes called badges can be added to a token, and their acceptances follow the similar process.
