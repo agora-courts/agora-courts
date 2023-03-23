@@ -5,9 +5,7 @@ pub fn close_dispute(
     ctx: Context<CloseDispute>,
     _dispute_id: u64
 ) -> Result<()> {
-    let dispute = &mut ctx.accounts.dispute;
-    dispute.can_close()?;
-    Ok(())
+    ctx.accounts.dispute.can_close()
 }
 
 #[derive(Accounts)]

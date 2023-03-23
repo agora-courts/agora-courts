@@ -23,7 +23,7 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
     let voter_record = &mut ctx.accounts.voter_record;
 
     let _payer = &mut ctx.accounts.user;
-    let _involved_with = voter_record.pop().unwrap().user_voted_for;
+    let _involved_with = &voter_record.pop().unwrap().user_voted_for;
 
     let mut rep_amount_to_transfer = dispute.config.rep_cost;
     let mut pay_amount_to_transfer = dispute.config.pay_cost;
@@ -37,7 +37,7 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
                 voter_record.currently_staked_pay -= pay_amount_to_transfer;
                 voter_record.currently_staked_rep -= rep_amount_to_transfer;
                 return Ok(());
-            } else if x == _involved_with {
+            } else if x == *_involved_with {
                 //winning voter reward
                 rep_amount_to_transfer = (((dispute.submitted_cases as u64 - 1) * dispute.config.rep_cost) + dispute.config.protocol_rep + (dispute.votes * dispute.config.voter_rep_cost)) / dispute.leader.votes;
                 pay_amount_to_transfer = (((dispute.submitted_cases as u64 - 1) * dispute.config.pay_cost) + dispute.config.protocol_pay) / dispute.leader.votes;
@@ -59,7 +59,7 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
 
     //refund arb_cost - two cases
     let court_key = ctx.accounts.court.key();
-    let id_ne_bytes = u64::to_ne_bytes(_dispute_id);
+    let id_ne_bytes = u64::to_be_bytes(_dispute_id);
     let signer_seeds: &[&[&[u8]]] = &[
         &[
             "dispute".as_bytes(), 
@@ -134,7 +134,7 @@ pub struct Claim<'info> {
 
     #[account(
         mut,
-        seeds = ["dispute".as_bytes(), court.key().as_ref(), u64::to_ne_bytes(_dispute_id).as_ref()],
+        seeds = ["dispute".as_bytes(), court.key().as_ref(), u64::to_be_bytes(_dispute_id).as_ref()],
         bump = dispute.bump,
         constraint = matches!(dispute.status, DisputeStatus::Concluded { .. })
                     @ InputError::DisputeNotClaimable,
