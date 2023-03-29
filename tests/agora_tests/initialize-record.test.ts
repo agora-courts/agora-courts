@@ -11,6 +11,7 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID,
     getAssociatedTokenAddress,
     getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
+import { user } from "./config";
 
 describe('agora-court', () => {
     //find the provider and set the anchor provider

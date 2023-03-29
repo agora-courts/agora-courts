@@ -9,10 +9,19 @@ use anchor_spl::{token::{Token, Mint, TokenAccount, self}, associated_token::Ass
 //TIES ARE NOT YET HANDLED
 
 pub fn vote(ctx: Context<Vote>, dispute_id: u64, candidate: Pubkey) -> Result<()> {
+
+    msg!("dispute ID: {}", dispute_id);
     let dispute = &mut ctx.accounts.dispute;
     let voter_record = &mut ctx.accounts.voter_record;
     let case = &mut ctx.accounts.case;
     let user_ata = &mut ctx.accounts.user_rep_ata;
+
+    let dispute_record = DisputeRecord {
+        dispute_id,
+        dispute_end_time: dispute.config.ends_at,
+        user_voted_for: candidate,
+    };
+    (*voter_record).push(dispute_record);
 
     //check timing / status
     dispute.can_vote()?;
@@ -49,13 +58,6 @@ pub fn vote(ctx: Context<Vote>, dispute_id: u64, candidate: Pubkey) -> Result<()
         };
     }
 
-    let dispute_record = DisputeRecord {
-        dispute_id,
-        dispute_end_time: ctx.accounts.dispute.config.ends_at,
-        user_voted_for: candidate,
-    };
-    voter_record.claim_queue.push(dispute_record);
-
     Ok(())
 }
 
@@ -75,11 +77,9 @@ pub struct Vote<'info> {
         bump = voter_record.bump,
         constraint = !voter_record.in_dispute(dispute_id)
                     @ InputError::UserAlreadyVoted,
-
         constraint = !voter_record.has_unclaimed_disputes()
                     @ InputError::UserHasUnclaimedDisputes,
-
-        constraint = voter_record.claim_queue.len() < court.max_dispute_votes.into()
+        constraint = voter_record.claim_queue.len() < court.max_dispute_votes as usize
                     @ InputError::UserMaxDisputesReached,
     )]
     pub voter_record: Box<Account<'info, VoterRecord>>,

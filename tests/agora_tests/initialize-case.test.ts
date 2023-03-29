@@ -95,8 +95,9 @@ describe('agora-court', () => {
         let disputeState = await agoraProgram.account.dispute.fetch(disputePDA);
 
         console.log("Involved disputes: ", recordState.claimQueue);
+        console.log("dispute ID stored: ", recordState.claimQueue[0].disputeId.toNumber());
         console.log("case evidence: ", caseState.evidence.toString());
-        console.log("dispute #: ", disputeState.submittedCases.toString());
+        console.log("dispute cases #: ", disputeState.submittedCases.toString());
         console.log("dispute status: ", disputeState.status);
     });
 });

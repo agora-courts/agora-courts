@@ -45,6 +45,7 @@ describe('agora-court', () => {
         
         let courtState = await agoraProgram.account.court.fetch(courtPDA);
         console.log("dispute ID: ", courtState.numDisputes);
+        console.log("dispute ID again: ", courtState.numDisputes.toNumber());
 
         const [disputePDA, ] = PublicKey
             .findProgramAddressSync(

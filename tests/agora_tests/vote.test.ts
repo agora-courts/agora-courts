@@ -118,6 +118,7 @@ describe('agora-court', () => {
         console.log("Voter Pubkey: ", voter.publicKey.toString());
         console.log("Voter ATA: ", userRepATA.toString());
         console.log("Rep Vault: ", repVault.toString());
+        // console.log("")
 
         tx.add(
             await agoraProgram.methods
@@ -150,6 +151,10 @@ describe('agora-court', () => {
         let disputeState = await agoraProgram.account.dispute.fetch(disputePDA);
         let caseState = await agoraProgram.account.case.fetch(casePDA);
         let recordState = await agoraProgram.account.voterRecord.fetch(recordPDA);
+
+        for (let record of recordState.claimQueue) {
+            console.log("id: ", record.disputeId.toNumber());
+        }
 
         console.log("Total Votes: ", disputeState.votes);
         console.log("Case Votes: ", caseState.votes);
