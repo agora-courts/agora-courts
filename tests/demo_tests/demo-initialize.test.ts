@@ -22,6 +22,8 @@ describe('demo-court', () => {
     const demoProgram = anchor.workspace.DemoTokens as Program<DemoTokens>;
     const demoProvider = demoProgram.provider as anchor.AnchorProvider;
 
+    const agoraProgram = anchor.workspace.AgoraCourt as Program<AgoraCourt>;
+
     //test specific information
 
     it('demo_initialize_accounts!', async () => {
@@ -43,6 +45,15 @@ describe('demo-court', () => {
                 ],
                 demoProgram.programId
             );
+        
+        const [courtPDA, ] = PublicKey
+            .findProgramAddressSync(
+                [
+                    anchor.utils.bytes.utf8.encode("court"),
+                    protocolPDA.toBuffer(),
+                ],
+                agoraProgram.programId
+            );
 
         console.log("protocol: ", protocolPDA)
 
@@ -52,19 +63,29 @@ describe('demo-court', () => {
         .accounts({
             protocol: protocolPDA,
             repMint: repMintPDA,
+            courtPda: courtPDA,
             payer: signer.publicKey,
+            agoraProgram: agoraProgram.programId,
             tokenProgram: TOKEN_PROGRAM_ID,
             systemProgram: SystemProgram.programId
         })
         .rpc()
 
         console.log("rep_mint: ", repMintPDA.toString());
-        console.log("protocol: ", protocolPDA.toString()); //should be ~5 SOL
+        //console.log("rep_mint_buffer: ", repMint.publicKey.toBuffer());
+        console.log("court: ", courtPDA.toString());
+        console.log("protocol: ", protocolPDA.toString());
 
+        let courtState = await agoraProgram.account.court.fetch(courtPDA);
         let protState = await demoProgram.account.protocol.fetch(protocolPDA);
 
+        console.log("protState->disputes: ", protState.numTickers);
+
+        expect(courtState.maxDisputeVotes).to.equal(10);
         //avoid expect on BN
-        console.log("protocol bump: ", protState.bump);
-        console.log("protocol id: ", protState.numTickers);
+        console.log(courtState.numDisputes.toString());
+        console.log("-------");
+        console.log("stored_rep_mint: ", courtState.repMint.toString());
+        console.log("stored_pay_mint (sol): ", courtState.payMint);
     });
 });

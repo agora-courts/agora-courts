@@ -10,7 +10,11 @@ import { TOKEN_PROGRAM_ID,
     getMinimumBalanceForRentExemptMint,
     getAssociatedTokenAddressSync,
     ASSOCIATED_TOKEN_PROGRAM_ID,
-    createAssociatedTokenAccountInstruction
+    createAssociatedTokenAccountInstruction,
+    NATIVE_MINT,
+    createWrappedNativeAccount,
+    createTransferCheckedInstruction,
+    createSyncNativeInstruction,
 } from "@solana/spl-token";
 import { DemoTokens } from '../../target/types/demo_tokens';
 
@@ -97,7 +101,79 @@ describe('demo-court', () => {
             ASSOCIATED_TOKEN_PROGRAM_ID
         );
 
-        //needs to be initialized, so call receive tokens first
+        let receiver = await connection.getAccountInfo(repVault);
+
+        if (receiver == null) {
+            tx.add(
+                createAssociatedTokenAccountInstruction(
+                    signer.publicKey,
+                    repVault,
+                    disputePDA,
+                    repMintPDA,
+                    TOKEN_PROGRAM_ID,
+                    ASSOCIATED_TOKEN_PROGRAM_ID
+                )
+            )
+        }
+
+        const payVault = getAssociatedTokenAddressSync(
+            NATIVE_MINT,
+            disputePDA,
+            true,
+            TOKEN_PROGRAM_ID,
+            ASSOCIATED_TOKEN_PROGRAM_ID
+        );
+
+        receiver = await connection.getAccountInfo(payVault);
+
+        if (receiver == null) {
+            tx.add(
+                createAssociatedTokenAccountInstruction(
+                    signer.publicKey,
+                    payVault,
+                    disputePDA,
+                    NATIVE_MINT,
+                    TOKEN_PROGRAM_ID,
+                    ASSOCIATED_TOKEN_PROGRAM_ID
+                )
+            )
+        }
+
+        //converting SOL to wSOL
+        const userPayAcc = getAssociatedTokenAddressSync(
+            NATIVE_MINT,
+            signer.publicKey,
+            false,
+            TOKEN_PROGRAM_ID,
+            ASSOCIATED_TOKEN_PROGRAM_ID
+        );
+
+        receiver = await connection.getAccountInfo(userPayAcc);
+
+        if (receiver == null) {
+            tx.add(
+                createAssociatedTokenAccountInstruction(
+                    signer.publicKey,
+                    userPayAcc,
+                    signer.publicKey,
+                    NATIVE_MINT,
+                    TOKEN_PROGRAM_ID,
+                    ASSOCIATED_TOKEN_PROGRAM_ID
+                )
+            )
+        }
+
+        tx.add(
+            SystemProgram.transfer({
+                fromPubkey: signer.publicKey,
+                toPubkey: userPayAcc,
+                lamports: 2*LAMPORTS_PER_SOL
+            }),
+            createSyncNativeInstruction(
+                userPayAcc
+            )
+        )
+
         const protocolRepATA = getAssociatedTokenAddressSync(
             repMintPDA,
             protocolPDA,
@@ -106,46 +182,99 @@ describe('demo-court', () => {
             ASSOCIATED_TOKEN_PROGRAM_ID
         );
 
-        console.log("rep mint: ", repMintPDA.toString());
-        console.log("court pda: ", courtPDA.toString());
-        console.log("dispute pda: ", disputePDA.toString());
-        console.log("rep vault: ", repVault.toString());
-        console.log("prot rep ata: ", protocolRepATA.toString());
+        receiver = await connection.getAccountInfo(protocolRepATA);
 
-        await demoProgram.methods
-            .submitToken(
-                address,
-                image,
-                name,
-                ticker,
-                description,
-                badges
+        if (receiver == null) {
+            tx.add(
+                createAssociatedTokenAccountInstruction(
+                    signer.publicKey,
+                    protocolRepATA,
+                    protocolPDA,
+                    repMintPDA,
+                    TOKEN_PROGRAM_ID,
+                    ASSOCIATED_TOKEN_PROGRAM_ID
+                )
             )
-            .accounts({
-                protocol: protocolPDA,
-                repMint: repMintPDA,
-                tickerAcc: tickerAccPDA,
-                courtPda: courtPDA,
-                disputePda: disputePDA,
-                repVault: repVault,
-                protocolRepAta: protocolRepATA,
-                payer: signer.publicKey,
-                agoraProgram: agoraProgram.programId,
-                tokenProgram: TOKEN_PROGRAM_ID,
-                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-                systemProgram: SystemProgram.programId
-            })
-            .rpc();
+        }
 
-            let tickerState = await demoProgram.account.ticker.fetch(tickerAccPDA);
+        const [recordPDA, ] = PublicKey
+            .findProgramAddressSync(
+                [
+                    anchor.utils.bytes.utf8.encode("record"),
+                    courtPDA.toBuffer(),
+                    signer.publicKey.toBuffer()
+                ],
+                agoraProgram.programId
+            );
 
-            console.log("tickerInfo: ", tickerState);
-            let disputeState = await agoraProgram.account.dispute.fetch(disputePDA);
-            for (const key in disputeState.config) {
-                console.log(key, ":", disputeState.config[key].toString());
-            }
+        console.log("protocl PDA: ", protocolPDA.toString());
+        console.log("court PDA: ", courtPDA.toString());
+        console.log("protRepATA: ", protocolRepATA.toString());
 
-            console.log("Prot ATA: ", protocolRepATA); //should decrease
-            console.log("Vault ATA: ", repVault); //should increrase
+        
+        tx.add(
+            await agoraProgram.methods
+                .initializeRecord(
+                )
+                .accounts({
+                    record: recordPDA,
+                    court: courtPDA,
+                    courtAuthority: protocolPDA,
+                    payer: signer.publicKey,
+                    systemProgram: SystemProgram.programId
+                })
+                .instruction()
+        )
+
+        tx.add(
+            await demoProgram.methods
+                .submitToken(
+                    address,
+                    image,
+                    name,
+                    ticker,
+                    description,
+                    badges
+                )
+                .accounts({
+                    protocol: protocolPDA,
+                    protocolRepAta: protocolRepATA,
+                    repMint: repMintPDA,
+                    payMint: NATIVE_MINT,
+                    tickerAcc: tickerAccPDA,
+                    courtPda: courtPDA,
+                    disputePda: disputePDA,
+                    repVault: repVault,
+                    payVault: payVault,
+                    payer: signer.publicKey,
+                    recordPda: recordPDA,
+                    userPayAta: userPayAcc,
+                    agoraProgram: agoraProgram.programId,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+                    systemProgram: SystemProgram.programId
+                })
+                .instruction()
+        );
+
+        await provider.sendAndConfirm(tx);
+
+        let tickerState = await demoProgram.account.ticker.fetch(tickerAccPDA);
+
+        console.log("tickerInfo: ", tickerState);
+        let disputeState = await agoraProgram.account.dispute.fetch(disputePDA);
+
+        for (const key in disputeState.config) {
+            console.log(key, ":", disputeState.config[key].toString());
+        }
+
+        console.log("Prot ATA: ", protocolRepATA); //should decrease
+        console.log("Vault ATA: ", repVault); //should increase
+
+        let recordState = await agoraProgram.account.voterRecord.fetch(recordPDA);
+        console.log("total interactions: ", disputeState.interactions); //1
+        console.log("dispute.users: ", disputeState.users); //should include most recent interactor
+        console.log("currently staked reputation: ", recordState.currentlyStakedRep.toNumber().toString(), " , pay: ", recordState.currentlyStakedPay.toNumber().toString());
+        console.log("user_pay_acc: ", userPayAcc.toString()); //should have lost 2 sol
     });
 });
