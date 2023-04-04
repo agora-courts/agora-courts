@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use agora_court::program::AgoraCourt;
-use agora_court::cpi::accounts::Vote;
+use agora_court::cpi::accounts::SelectVote;
 use anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{Mint, Token, TokenAccount};
@@ -8,7 +8,6 @@ use crate::protocol::*;
 
 pub fn token_vote(
     ctx: Context<TokenVote>,
-    candidate: Pubkey,
     id: u64
 ) -> Result<()> {
     //calls init dispute and creates Ticker account
@@ -37,23 +36,24 @@ pub fn token_vote(
 
     let vote_cpi = CpiContext::new(
         ctx.accounts.agora_program.to_account_info(),
-        Vote {
+        SelectVote {
             case: ctx.accounts.case_pda.to_account_info(),
+            candidate: ctx.accounts.candidate.to_account_info(),
             voter_record: ctx.accounts.record_pda.to_account_info(),
             dispute: ctx.accounts.dispute_pda.to_account_info(),
             rep_vault: ctx.accounts.rep_vault.to_account_info(),
             court: ctx.accounts.court_pda.to_account_info(),
-            court_authority: ctx.accounts.protocol.to_account_info(),
-            user: ctx.accounts.payer.to_account_info(),
-            user_rep_ata: ctx.accounts.user_rep_ata.to_account_info(),
             rep_mint: ctx.accounts.rep_mint.to_account_info(),
+            court_authority: ctx.accounts.protocol.to_account_info(),
+            payer: ctx.accounts.payer.to_account_info(),
+            user_rep_ata: ctx.accounts.user_rep_ata.to_account_info(),
             system_program: ctx.accounts.system_program.to_account_info(),
             token_program: ctx.accounts.token_program.to_account_info(),
             associated_token_program: ctx.accounts.associated_token_program.to_account_info()
         }
     );
 
-    agora_court::cpi::vote(vote_cpi, id, candidate)
+    agora_court::cpi::select_vote(vote_cpi, id)
 }
 
 #[derive(Accounts)]
@@ -69,7 +69,8 @@ pub struct TokenVote<'info> {
         seeds = ["rep_mint".as_bytes()], bump
     )]
     pub rep_mint: Account<'info, Mint>,
-
+    ///CHECK: Agora Court will check this for us
+    pub candidate: UncheckedAccount<'info>,
     ///CHECK: Agora Court will check this for us
     #[account(mut)]
     pub case_pda: UncheckedAccount<'info>,

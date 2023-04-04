@@ -34,7 +34,7 @@ describe('agora-court', () => {
 
         const airdropSignature = await connection.requestAirdrop(
             user_one.publicKey,
-            1*LAMPORTS_PER_SOL,
+            0.2*LAMPORTS_PER_SOL,
         );
         const latestBlockHash = await connection.getLatestBlockhash();
         await connection.confirmTransaction({

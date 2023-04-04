@@ -121,20 +121,20 @@ describe('agora-court', () => {
 
         tx.add(
             await agoraProgram.methods
-                .vote(
+                .selectVote(
                     disputeId,
-                    candidate.publicKey,
                 )
                 .accounts({
                     case: casePDA,
+                    candidate: candidate.publicKey,
                     voterRecord: recordPDA,
                     dispute: disputePDA,
                     repVault: repVault,
                     court: courtPDA,
-                    courtAuthority: signer.publicKey,
-                    user: voter.publicKey,
-                    userRepAta: userRepATA,
                     repMint: repMint.publicKey,
+                    courtAuthority: signer.publicKey,
+                    payer: voter.publicKey,
+                    userRepAta: userRepATA,
                     systemProgram: SystemProgram.programId,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID

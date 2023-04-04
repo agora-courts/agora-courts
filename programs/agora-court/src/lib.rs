@@ -41,11 +41,14 @@ pub mod agora_court {
         instructions::initialize_dispute(ctx, users, config)
     }
 
-    pub fn initialize_record(ctx: Context<InitializeRecord>,) -> Result<()> {
-        instructions::initialize_record(ctx)
+    pub fn select_vote(
+        ctx: Context<SelectVote>,
+        dispute_id: u64
+    ) -> Result<()> {
+        instructions::select_vote(ctx, dispute_id)
     }
 
-    pub fn vote(ctx: Context<Vote>, dispute_id: u64, user_case: Pubkey) -> Result<()> {
-        instructions::vote(ctx, dispute_id, user_case)
+    pub fn initialize_record(ctx: Context<InitializeRecord>) -> Result<()> {
+        instructions::initialize_record(ctx)
     }
 }

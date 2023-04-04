@@ -10,9 +10,6 @@ pub mod initialize_court;
 pub use initialize_record::*;
 pub mod initialize_record;
 
-pub use vote::*;
-pub mod vote;
-
 pub use claim::*;
 pub mod claim;
 
@@ -21,3 +18,6 @@ pub mod close_dispute;
 
 pub use interact::*;
 pub mod interact;
+
+pub use select_vote::*;
+pub mod select_vote;

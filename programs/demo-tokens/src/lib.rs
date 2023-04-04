@@ -37,11 +37,10 @@ pub mod demo_tokens {
 
     pub fn token_vote(
         ctx: Context<TokenVote>,
-        candidate: Pubkey,
         id: u64
     ) -> Result<()> {
         //vote for a token here and grant users w/o rep some
-        instructions::token_vote(ctx, candidate, id)
+        instructions::token_vote(ctx, id)
     }
 
 }

@@ -128,7 +128,6 @@ describe('demo-court', () => {
         tx.add(
             await demoProgram.methods
             .tokenVote(
-                candidate,
                 id,
             )
             .accounts({
