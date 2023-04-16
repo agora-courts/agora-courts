@@ -1,18 +1,18 @@
 import * as anchor from '@coral-xyz/anchor';
 import { Program } from '@coral-xyz/anchor';
-import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Keypair, Transaction, Connection, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { PublicKey, SystemProgram, Transaction, Connection } from '@solana/web3.js';
 import { AgoraCourt } from '../../target/types/agora_court';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, 
-    createAssociatedTokenAccount, 
+import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID,  
     createAssociatedTokenAccountInstruction, 
-    createInitializeMint2Instruction,
     createMintToInstruction,
-    getAssociatedTokenAddress,
     getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
-import { mintAuthority, repMint, decimals, setDispute } from "./config"
+import { setDispute, getMintInfo } from "./config"
 
 describe('agora-court', () => {
+    //get mint info
+    let [mintAuthority, repMint, decimals] = getMintInfo();
+
     //find the provider and set the anchor provider
     const provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
