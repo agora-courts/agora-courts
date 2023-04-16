@@ -59,17 +59,17 @@ impl Dispute {
                 if timestamp < self.config.init_cases_ends_at {
                     return Ok(());
                 }
-                err!(InputError::CasesNoLongerCanBeSubmitted)
             },
             DisputeStatus::Grace => {
-                if (timestamp > self.config.grace_ends_at || self.interactions == self.users.len() as u8) && timestamp < self.config.init_cases_ends_at {
+                if self.interactions == self.users.len() as u8 && timestamp < self.config.init_cases_ends_at {
                     self.status = DisputeStatus::Waiting;
                     return Ok(());
                 }
-                err!(InputError::CasesNoLongerCanBeSubmitted)
             },
-            _ => err!(InputError::CasesNoLongerCanBeSubmitted)
+            _ => {}
         }
+
+        err!(InputError::CasesNoLongerCanBeSubmitted)
     }
 
     pub fn can_vote(&mut self) -> Result<()> {
@@ -79,17 +79,17 @@ impl Dispute {
                 if timestamp < self.config.ends_at {
                     return Ok(());
                 }
-                err!(InputError::DisputeNotVotable)
             },
             DisputeStatus::Waiting => {
                 if (timestamp > self.config.init_cases_ends_at || self.submitted_cases == self.users.len() as u8) && timestamp < self.config.ends_at {
                     self.status = DisputeStatus::Voting;
                     return Ok(());
                 }
-                err!(InputError::DisputeNotVotable)
             },
-            _ => err!(InputError::DisputeNotVotable)
+            _ => {}
         }
+
+        err!(InputError::DisputeNotVotable)
     }
 
     pub fn can_close(&mut self) -> Result<()> {
@@ -110,6 +110,13 @@ impl Dispute {
                     return Ok(());
                 }
             },
+            DisputeStatus::Waiting => {
+                //no one ever voted
+                if timestamp > self.config.ends_at {
+                    self.status = DisputeStatus::Concluded { winner: None };
+                    return Ok(())
+                }
+            },
             _ => {}
         };
 
@@ -120,7 +127,7 @@ impl Dispute {
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq)]
 pub enum DisputeStatus {
     Grace, //includes interactions and time for anyone to submit first case
-    Waiting, //a case has been made, waiting for all evidence to be processed
+    Waiting, //a case has been made, waiting for all evidence to be provided
     Voting, //evidence is in, voting now
     Concluded { winner: Option<Pubkey> }, //winner declared or no dispute was started
 }

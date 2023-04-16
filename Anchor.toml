@@ -3,8 +3,8 @@ seeds = false
 skip-lint = false
 
 [programs.devnet]
-agora_court = "Benri2piS4b4h5S54uaMRybuhhZtbM4L3zofhd3Y9FXv"
-demo_tokens = "Fx47ugR8zmke83hwzFHfgS5PKZN2wXeX1aP3g7DbS9r"
+agora_court = "ABkQZCq2qh32X75A5FjaT8FGRWEqujPiBV3wJZEmzuEX"
+demo_tokens = "ABGSi2xFcgb24Pq4N9QtZhSbSzgQWGCSpRohLUiF8puJ"
 
 [registry]
 url = "https://anchor.projectserum.com"

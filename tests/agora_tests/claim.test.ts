@@ -11,7 +11,9 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID,
     getAssociatedTokenAddress,
     getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
-import { mintAuthority, repMint, decimals, user, disputeId } from "./config"
+import { mintAuthority, repMint, user, disputeId } from "./config"
+
+//MUST SET USER CORRECTLY IN CONFIG TO CALL MORE THAN ONCE
 
 describe('agora-court', () => {
     //find the provider and set the anchor provider
@@ -81,6 +83,9 @@ describe('agora-court', () => {
             ASSOCIATED_TOKEN_PROGRAM_ID
         );
 
+        console.log("From Rep ATA: ", fromATA.toString());
+        console.log("Rep ATA: ", rep_vault_ata.toString());
+
         await agoraProgram.methods
             .claim(disputeId)
             .accounts({
@@ -107,5 +112,6 @@ describe('agora-court', () => {
         recordState = await agoraProgram.account.voterRecord.fetch(recordPDA);
         console.log("record after: ", recordState);
         console.log("record stake after: ", recordState.currentlyStakedRep.toNumber().toString());
+        console.log("user pubkey: ", user.publicKey.toString());
     });
 });

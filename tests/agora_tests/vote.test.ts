@@ -13,6 +13,8 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { mintAuthority, repMint, disputeId, user as candidate, decimals, voter } from "./config";
 
+//MUST SET USER CORRECTLY IN CONFIG TO VOTE FOR RIGHT PERSON
+
 describe('agora-court', () => {
     //find the provider and set the anchor provider
     const provider = anchor.AnchorProvider.env();
@@ -31,9 +33,9 @@ describe('agora-court', () => {
     it('vote!', async () => {
         //signer is just the wallet
         const signer = agoraProvider.wallet;
-
         let tx = new Transaction();
 
+        //find PDAs
         const [courtPDA, ] = PublicKey
             .findProgramAddressSync(
                 [
@@ -73,6 +75,7 @@ describe('agora-court', () => {
                 agoraProgram.programId
             );
 
+        //dispute & voter rep vault
         const repVault = getAssociatedTokenAddressSync(
             repMint.publicKey,
             disputePDA,
@@ -104,8 +107,8 @@ describe('agora-court', () => {
             )
         }
 
+        //voter needs 5 rep
         let LAMPORTS_PER_MINT = Math.pow(10, decimals);
-
         tx.add(
             createMintToInstruction(
                 repMint.publicKey,

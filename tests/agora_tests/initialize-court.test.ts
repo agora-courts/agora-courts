@@ -1,55 +1,52 @@
 import * as anchor from '@coral-xyz/anchor';
 import { Program } from '@coral-xyz/anchor';
-import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Keypair, Transaction, Connection, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { PublicKey, SystemProgram, Keypair, Transaction, Connection, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { expect } from 'chai';
 import { AgoraCourt } from '../../target/types/agora_court';
 import { TOKEN_PROGRAM_ID, 
     createInitializeMint2Instruction,
-    createInitializeMintInstruction,
     MINT_SIZE,
     getMinimumBalanceForRentExemptMint
 } from "@solana/spl-token";
+import { setMint } from './config';
 
 describe('agora-court', () => {
     //find the provider and set the anchor provider
     const provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
-
     const connection = new Connection("https://api.devnet.solana.com");
 
     //get the current program and provider from the IDL
     const agoraProgram = anchor.workspace.AgoraCourt as Program<AgoraCourt>;
     const agoraProvider = agoraProgram.provider as anchor.AnchorProvider;
 
-    //test specific information
+    //test parameters
     const decimals = 9;
+    const max_dispute_votes = 9;
     const mintAuthority = Keypair.generate();
     const repMint = Keypair.generate();
 
-    console.log(mintAuthority.publicKey.toString());
-    console.log("mint auth pair: ", mintAuthority.secretKey.toString());
-    console.log("rep secret: ", repMint.secretKey.toString());
-    console.log(repMint.publicKey.toString())
+    console.log("Mint Authority Pubkey: ", mintAuthority.publicKey.toString());
+    console.log("Mint Pubkey: ", repMint.publicKey.toString());
 
     it('initialize_court!', async () => {
         //signer is just the wallet
         const signer = agoraProvider.wallet;
-
         let tx = new Transaction();
 
+        //airdrop 1 SOL for fees
         const airdropSignature = await connection.requestAirdrop(
             mintAuthority.publicKey,
             1*LAMPORTS_PER_SOL,
         );
-
         const latestBlockHash = await connection.getLatestBlockhash();
-
         await connection.confirmTransaction({
             blockhash: latestBlockHash.blockhash,
             lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
             signature: airdropSignature,
         });
 
+        //create a new mint for testing
         tx.add(
             SystemProgram.createAccount({
                 fromPubkey: mintAuthority.publicKey,
@@ -66,6 +63,7 @@ describe('agora-court', () => {
             )
         )
 
+        //court PDA
         const [courtPDA, ] = PublicKey
             .findProgramAddressSync(
                 [
@@ -81,7 +79,7 @@ describe('agora-court', () => {
             .initializeCourt(
                 repMint.publicKey,
                 null,
-                9
+                max_dispute_votes
             )
             .accounts({
                 court: courtPDA,
@@ -93,18 +91,17 @@ describe('agora-court', () => {
         )
         
         await provider.sendAndConfirm(tx, [mintAuthority, repMint]);
-        
-        console.log("rep_mint: ", repMint.publicKey.toString());
 
-        console.log("court: ", courtPDA.toString());
+        console.log("Court PDA: ", courtPDA.toString());
 
         let courtState = await agoraProgram.account.court.fetch(courtPDA);
 
-        expect(courtState.maxDisputeVotes).to.equal(9);
-        //avoid expect on BN
-        console.log(courtState.numDisputes);
-        console.log("-------");
+        expect(courtState.maxDisputeVotes).to.equal(max_dispute_votes);
+
+        console.log("Num Disputes (BN): ", courtState.numDisputes.toNumber().toString());
         console.log("stored_rep_mint: ", courtState.repMint.toString());
         console.log("stored_pay_mint (null): ", courtState.payMint);
+
+        setMint(mintAuthority, repMint, decimals);
     });
 });

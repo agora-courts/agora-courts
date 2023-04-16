@@ -13,6 +13,8 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { disputeId, user } from "./config"
 
+//MUST SET USER CORRECTLY IN CONFIG TO CALL MORE THAN ONCE
+
 describe('agora-court', () => {
     //find the provider and set the anchor provider
     const provider = anchor.AnchorProvider.env();
@@ -24,14 +26,12 @@ describe('agora-court', () => {
     const agoraProgram = anchor.workspace.AgoraCourt as Program<AgoraCourt>;
     const agoraProvider = agoraProgram.provider as anchor.AnchorProvider;
 
-    //test specific information
-
     it('init_case!', async () => {
         //signer is just the wallet
         const signer = agoraProvider.wallet;
-
         let tx = new Transaction();
 
+        //find PDAs
         const [courtPDA, ] = PublicKey
             .findProgramAddressSync(
                 [

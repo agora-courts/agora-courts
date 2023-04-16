@@ -22,27 +22,30 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
     let dispute_rep_ata = &mut ctx.accounts.rep_vault;
     let voter_record = &mut ctx.accounts.voter_record;
 
-    let _payer = &mut ctx.accounts.user;
-    let _involved_with = &voter_record.pop().unwrap().user_voted_for;
+    let payer = &mut ctx.accounts.user;
+    let involved_with = voter_record.pop().unwrap().user_voted_for;
 
     let mut rep_amount_to_transfer = dispute.config.rep_cost;
     let mut pay_amount_to_transfer = dispute.config.pay_cost;
 
     match dispute.status {
         DisputeStatus::Concluded { winner: Some(x) } => {
-            if x == _payer.key() {
+            if x == payer.key() {
                 //refund arb_cost
-            } else if dispute.users.contains(&Some(_payer.key())) {
+                voter_record.currently_staked_pay -= pay_amount_to_transfer;
+                voter_record.currently_staked_rep -= rep_amount_to_transfer;
+            } else if dispute.users.contains(&Some(payer.key())) {
                 //losing party -= voter_record
                 voter_record.currently_staked_pay -= pay_amount_to_transfer;
                 voter_record.currently_staked_rep -= rep_amount_to_transfer;
                 return Ok(());
-            } else if x == *_involved_with {
+            } else if x == involved_with {
                 //winning voter reward
+                //i know this literally doesn't check overflow at all - the other subtractions shouldn't matter for overflow/underflow?
+                voter_record.currently_staked_rep -= dispute.config.voter_rep_cost;
+
                 rep_amount_to_transfer = (((dispute.submitted_cases as u64 - 1) * dispute.config.rep_cost) + dispute.config.protocol_rep + (dispute.votes * dispute.config.voter_rep_cost)) / dispute.leader.votes;
                 pay_amount_to_transfer = (((dispute.submitted_cases as u64 - 1) * dispute.config.pay_cost) + dispute.config.protocol_pay) / dispute.leader.votes;
-
-                voter_record.currently_staked_rep -= dispute.config.voter_rep_cost;
             } else {
                 //losing voter -= voter_record
                 voter_record.currently_staked_rep -= dispute.config.voter_rep_cost;
@@ -51,11 +54,16 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
         },
         DisputeStatus::Concluded { winner: None } => {
             //refund arb_cost
+            voter_record.currently_staked_pay -= pay_amount_to_transfer;
+            voter_record.currently_staked_rep -= rep_amount_to_transfer;
         },
         _ => {
-            return Ok(()); //impossible
+            return err!(InputError::DisputeNotClaimable); //not closed
         }
     }
+
+    msg!("rep to transfer: {}, pay to transfer: {}", rep_amount_to_transfer, pay_amount_to_transfer);
+
 
     //refund arb_cost - two cases
     let court_key = ctx.accounts.court.key();
@@ -84,7 +92,6 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
             );
 
             transfer(cpi_ctx, rep_amount_to_transfer)?;
-            voter_record.currently_staked_rep -= rep_amount_to_transfer;
         } else {
             return err!(InputError::ReputationAtaMissing);
         }
@@ -108,7 +115,6 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
             );
 
             transfer(cpi_ctx, pay_amount_to_transfer)?;
-            voter_record.currently_staked_pay -= pay_amount_to_transfer;
         } else {
             return err!(InputError::PaymentAtaMissing);
         }
@@ -136,8 +142,6 @@ pub struct Claim<'info> {
         mut,
         seeds = ["dispute".as_bytes(), court.key().as_ref(), u64::to_be_bytes(_dispute_id).as_ref()],
         bump = dispute.bump,
-        constraint = matches!(dispute.status, DisputeStatus::Concluded { .. })
-                    @ InputError::DisputeNotClaimable,
    )]
     pub dispute: Box<Account<'info, Dispute>>,
 

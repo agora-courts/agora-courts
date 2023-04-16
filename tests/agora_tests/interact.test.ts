@@ -8,32 +8,29 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID,
     createAssociatedTokenAccountInstruction, 
     createInitializeMint2Instruction,
     createMintToInstruction,
-    getAssociatedTokenAddress,
     getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import { mintAuthority, repMint, disputeId, user, decimals } from "./config";
+
+//MUST SET USER CORRECTLY IN CONFIG TO CALL MORE THAN ONCE
 
 describe('agora-court', () => {
     //find the provider and set the anchor provider
     const provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
-
     const connection = new Connection("https://api.devnet.solana.com");
 
     //get the current program and provider from the IDL
     const agoraProgram = anchor.workspace.AgoraCourt as Program<AgoraCourt>;
     const agoraProvider = agoraProgram.provider as anchor.AnchorProvider;
 
-    //test specific information
-    console.log("mint auth: ", mintAuthority.publicKey.toString());
-    console.log("repmint: ", repMint.publicKey.toString());
-
     it('interact!', async () => {
         //signer is just the wallet
         const signer = agoraProvider.wallet;
-
         let tx = new Transaction();
+        let LAMPORTS_PER_MINT = Math.pow(10, decimals);
 
+        //find PDAs
         const [courtPDA, ] = PublicKey
             .findProgramAddressSync(
                 [
@@ -63,6 +60,7 @@ describe('agora-court', () => {
                 agoraProgram.programId
             );
 
+        //find user and dispute specific ATA
         const userRepATA = getAssociatedTokenAddressSync(
             repMint.publicKey,
             user.publicKey,
@@ -79,10 +77,7 @@ describe('agora-court', () => {
             ASSOCIATED_TOKEN_PROGRAM_ID
         );
 
-        let LAMPORTS_PER_MINT = Math.pow(10, decimals);
-
         const receiver = await connection.getAccountInfo(userRepATA);
-
         if (receiver == null) {
             tx.add(
                 createAssociatedTokenAccountInstruction(
@@ -96,13 +91,13 @@ describe('agora-court', () => {
             )
         }
 
-        //mint to user ATA bc rep cost was 15
+        //mint to user ATA bc there is a rep cost
         tx.add(
             createMintToInstruction(
                 repMint.publicKey,
                 userRepATA,
                 mintAuthority.publicKey, //signer
-                20 * LAMPORTS_PER_MINT
+                15 * LAMPORTS_PER_MINT
             )
         )
 
@@ -138,7 +133,7 @@ describe('agora-court', () => {
                     [user]
                 )
                 .instruction()
-        )
+        );
 
         await provider.sendAndConfirm(tx, [mintAuthority, user]);
 

@@ -17,7 +17,6 @@ describe('agora-court', () => {
     //find the provider and set the anchor provider
     const provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
-
     const connection = new Connection("https://api.devnet.solana.com");
 
     //get the current program and provider from the IDL
@@ -27,8 +26,6 @@ describe('agora-court', () => {
     it('close_dispute!', async () => {
         //signer is just the wallet
         const signer = agoraProvider.wallet;
-
-        let tx = new Transaction();
 
         const [courtPDA, ] = PublicKey
             .findProgramAddressSync(
@@ -64,8 +61,7 @@ describe('agora-court', () => {
             .rpc();
 
         disputeState = await agoraProgram.account.dispute.fetch(disputePDA);
-        console.log("Closed dispute: ", disputeState);
-                
+        console.log("Closed dispute: ", disputeState);  
     });
 });
 

@@ -6,7 +6,7 @@ use state::*;
 pub mod state;
 pub mod instructions;
 
-declare_id!("Fx47ugR8zmke83hwzFHfgS5PKZN2wXeX1aP3g7DbS9r");
+declare_id!("ABGSi2xFcgb24Pq4N9QtZhSbSzgQWGCSpRohLUiF8puJ");
 
 //This contract is part of the Agora Tokens Demo, which provides one implementation of Agora Court. 
 //Note that this is the simplest way to create a functional dispute. Tokens are minted to anyone,
