@@ -26,4 +26,5 @@ claim = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/agora_tests/claim
 demoinit = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/demo_tests/demo-initialize.test.ts"
 subtoken = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/demo_tests/submit-token.test.ts"
 tokenvote = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/demo_tests/token-vote.test.ts"
+token = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/demo_tests/get-token.ts"
 lint = "cargo dylint --all --workspace"

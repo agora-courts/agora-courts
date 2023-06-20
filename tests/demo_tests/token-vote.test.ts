@@ -29,7 +29,6 @@ describe('demo-court', () => {
 
     //PARAMETERS
     const id = new anchor.BN(0);
-    const candidate = PublicKey.default;
     const voter = Keypair.generate();
 
     //ENSURE voter has init record
@@ -38,6 +37,8 @@ describe('demo-court', () => {
         //signer is just the wallet
         const signer = demoProvider.wallet;
         let tx = new Transaction();
+        const candidate = signer.publicKey;
+        
         const [repMintPDA, ] = PublicKey
             .findProgramAddressSync(
                 [
@@ -133,6 +134,7 @@ describe('demo-court', () => {
             .accounts({
                 protocol: protocolPDA,
                 repMint: repMintPDA,
+                candidate: candidate,
                 casePda: casePDA,
                 recordPda: recordPDA,
                 courtPda: courtPDA,

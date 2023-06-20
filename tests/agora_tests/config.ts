@@ -16,7 +16,6 @@ interface Config {
   voterSecret: Uint8Array
 }
 
-//eventually write to json to preserve state
 export function setMint(auth: Keypair, mint: Keypair, dec: number) {
     console.log("MINT AUTH SECRET: ", auth.secretKey);
     console.log("REP MINT SECRET: ", mint.secretKey);
@@ -48,7 +47,6 @@ export function createUsers(userOne: Keypair, userTwo: Keypair, userThree: Keypa
 }
 
 export function setDispute(id: anchor.BN) {
-
     console.log("Dispute ID #: ", id.toNumber().toString());
 
     const configContents = fs.readFileSync(fileName, 'utf8');
@@ -63,18 +61,8 @@ export function getMintInfo(): [Keypair, Keypair, number] {
   const configContents = fs.readFileSync(fileName, 'utf8');
   const config: Config = JSON.parse(configContents);
 
-  let mintAuthArr = [];
-  let repMintArr = [];
-  for (const key in config.mintAuthSecret) {
-    mintAuthArr.push(config.mintAuthSecret[key]);
-  }
-
-  for (const key in config.repMintSecret) {
-    repMintArr.push(config.repMintSecret[key]);
-  }
-
-  let mintAuthority = Keypair.fromSecretKey(Uint8Array.from(mintAuthArr));
-  let repMint = Keypair.fromSecretKey(Uint8Array.from(repMintArr));
+  let mintAuthority = Keypair.fromSecretKey(config.mintAuthSecret);
+  let repMint = Keypair.fromSecretKey(config.repMintSecret);
   let decimals = config.decimals;
 
   return [mintAuthority, repMint, decimals];
@@ -93,24 +81,9 @@ export function getUsers(): [Keypair, Keypair, Keypair] {
   const configContents = fs.readFileSync(fileName, 'utf8');
   const config: Config = JSON.parse(configContents);
 
-  let userOneArr = [];
-  let userTwoArr = [];
-  let voterArr = [];
-  for (const key in config.userOneSecret) {
-    userOneArr.push(config.userOneSecret[key]);
-  }
-
-  for (const key in config.userTwoSecret) {
-    userTwoArr.push(config.userTwoSecret[key]);
-  }
-
-  for (const key in config.voterSecret) {
-    voterArr.push(config.voterSecret[key]);
-  }
-
-  let userOne = Keypair.fromSecretKey(Uint8Array.from(userOneArr));
-  let userTwo = Keypair.fromSecretKey(Uint8Array.from(userTwoArr));
-  let voter = Keypair.fromSecretKey(Uint8Array.from(voterArr));
+  let userOne = Keypair.fromSecretKey(config.userOneSecret);
+  let userTwo = Keypair.fromSecretKey(config.userTwoSecret);
+  let voter = Keypair.fromSecretKey(config.voterSecret);
 
   return [userOne, userTwo, voter];
 }

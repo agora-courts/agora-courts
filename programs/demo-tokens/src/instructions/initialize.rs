@@ -44,8 +44,8 @@ pub struct Initialize<'info> {
     #[account(
         init,
         payer = payer,
-        space = 8 + 1 + 1,
-        seeds = ["protocol".as_bytes()], bump,
+        space = 8 + 1 + 8,
+        seeds = ["protocol".as_bytes()], bump
     )]
     pub protocol: Account<'info, Protocol>,
 

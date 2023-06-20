@@ -108,7 +108,7 @@ pub fn submit_token(
 
     agora_court::cpi::initialize_dispute(dispute_cpi, users, dispute_config)?;
 
-    agora_court::cpi::interact(interact_cpi, n as u64)
+    agora_court::cpi::interact(interact_cpi, n)
 }
 
 #[derive(Accounts)]
@@ -143,7 +143,7 @@ pub struct Submit<'info> {
     #[account(
         init,
         payer = payer,
-        seeds = ["ticker".as_bytes(), &[protocol.num_tickers]], bump,
+        seeds = ["ticker".as_bytes(), protocol.num_tickers.to_be_bytes().as_ref()], bump,
         space = Ticker::get_size(address, image, name, ticker, description, badges)
     )]
     pub ticker_acc: Account<'info, Ticker>,

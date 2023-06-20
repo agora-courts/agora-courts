@@ -3,7 +3,11 @@ import { Program } from '@coral-xyz/anchor';
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Keypair, Transaction, Connection, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { expect } from 'chai';
 import { AgoraCourt } from '../../target/types/agora_court';
-import { TOKEN_PROGRAM_ID
+import { TOKEN_PROGRAM_ID, 
+    createInitializeMint2Instruction,
+    createInitializeMintInstruction,
+    MINT_SIZE,
+    getMinimumBalanceForRentExemptMint
 } from "@solana/spl-token";
 import { DemoTokens } from '../../target/types/demo_tokens';
 
@@ -41,47 +45,22 @@ describe('demo-court', () => {
                 ],
                 demoProgram.programId
             );
+
+        const id_bn = new anchor.BN(1);
         
-        const [courtPDA, ] = PublicKey
+        const [tickerPDA, ] = PublicKey
             .findProgramAddressSync(
                 [
-                    anchor.utils.bytes.utf8.encode("court"),
-                    protocolPDA.toBuffer(),
+                    anchor.utils.bytes.utf8.encode("ticker"),
+                    id_bn.toArrayLike(Buffer, "be", 8)
                 ],
-                agoraProgram.programId
+                demoProgram.programId
             );
 
-        console.log("protocol: ", protocolPDA)
-
-        //calls the initialize method
-        await demoProgram.methods
-        .initialize()
-        .accounts({
-            protocol: protocolPDA,
-            repMint: repMintPDA,
-            courtPda: courtPDA,
-            payer: signer.publicKey,
-            agoraProgram: agoraProgram.programId,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            systemProgram: SystemProgram.programId
-        })
-        .rpc()
-
-        console.log("rep_mint: ", repMintPDA.toString());
-        //console.log("rep_mint_buffer: ", repMint.publicKey.toBuffer());
-        console.log("court: ", courtPDA.toString());
-        console.log("protocol: ", protocolPDA.toString());
-
-        let courtState = await agoraProgram.account.court.fetch(courtPDA);
+        let tickerState = await demoProgram.account.ticker.fetch(tickerPDA);
         let protState = await demoProgram.account.protocol.fetch(protocolPDA);
 
-        console.log("protState->disputes: ", protState.numTickers.toNumber().toString());
-
-        expect(courtState.maxDisputeVotes).to.equal(10);
-        //avoid expect on BN
-        console.log(courtState.numDisputes.toString());
-        console.log("-------");
-        console.log("stored_rep_mint: ", courtState.repMint.toString());
-        console.log("stored_pay_mint (sol): ", courtState.payMint);
+        console.log(protState);
+        console.log(tickerState);
     });
 });
