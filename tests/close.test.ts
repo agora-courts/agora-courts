@@ -1,8 +1,9 @@
 import * as anchor from '@coral-xyz/anchor';
 import { Program } from '@coral-xyz/anchor';
 import { PublicKey, Connection } from '@solana/web3.js';
-import { AgoraCourt } from '../../target/types/agora_court';
-import { getDisputeID } from "./config"
+import { AgoraCourt } from '../target/types/agora_court';
+import { getDisputeID } from "./utils"
+import { courtName, networkURL } from './config';
 
 describe('agora-court', () => {
     //get information from json
@@ -11,7 +12,7 @@ describe('agora-court', () => {
     //find the provider and set the anchor provider
     const provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
-    const connection = new Connection("https://api.devnet.solana.com");
+    const connection = new Connection(networkURL);
 
     //get the current program and provider from the IDL
     const agoraProgram = anchor.workspace.AgoraCourt as Program<AgoraCourt>;
@@ -25,7 +26,7 @@ describe('agora-court', () => {
             .findProgramAddressSync(
                 [
                     anchor.utils.bytes.utf8.encode("court"),
-                    provider.wallet.publicKey.toBuffer(),
+                    anchor.utils.bytes.utf8.encode(courtName),
                 ],
                 agoraProgram.programId
             );

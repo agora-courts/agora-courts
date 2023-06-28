@@ -1,22 +1,24 @@
 import * as anchor from '@coral-xyz/anchor';
 import { Program } from '@coral-xyz/anchor';
 import { PublicKey, SystemProgram, Transaction, Connection } from '@solana/web3.js';
-import { AgoraCourt } from '../../target/types/agora_court';
+import { AgoraCourt } from '../target/types/agora_court';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID,  
     createAssociatedTokenAccountInstruction, 
     createMintToInstruction,
     getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
-import { setDispute, getMintInfo } from "./config"
+import { setDispute, getMintInfo, getProtocol } from "./utils"
+import { courtName, networkURL } from './config';
 
 describe('agora-court', () => {
     //get mint info
-    let [mintAuthority, repMint, decimals] = getMintInfo();
+    const [mintAuthority, repMint, decimals] = getMintInfo();
+    const protocol = getProtocol();
 
     //find the provider and set the anchor provider
     const provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
-    const connection = new Connection("https://api.devnet.solana.com");
+    const connection = new Connection(networkURL);
 
     //get the current program and provider from the IDL
     const agoraProgram = anchor.workspace.AgoraCourt as Program<AgoraCourt>;
@@ -32,7 +34,7 @@ describe('agora-court', () => {
             .findProgramAddressSync(
                 [
                     anchor.utils.bytes.utf8.encode("court"),
-                    provider.wallet.publicKey.toBuffer(),
+                    anchor.utils.bytes.utf8.encode(courtName),
                 ],
                 agoraProgram.programId
             );
@@ -51,7 +53,7 @@ describe('agora-court', () => {
             );
 
         //ATA specific to this dispute
-        const rep_vault_ata = getAssociatedTokenAddressSync(
+        const repVaultATA = getAssociatedTokenAddressSync(
             repMint.publicKey,
             disputePDA,
             true,
@@ -59,23 +61,23 @@ describe('agora-court', () => {
             ASSOCIATED_TOKEN_PROGRAM_ID   
         );
 
-        //Protocol (signer.key) ATA account
-        const fromATA = getAssociatedTokenAddressSync(
+        //Protocol ATA account
+        const protocolATA = getAssociatedTokenAddressSync(
             repMint.publicKey,
-            signer.publicKey,
+            protocol.publicKey,
             true,
             TOKEN_PROGRAM_ID,
             ASSOCIATED_TOKEN_PROGRAM_ID
         )
 
-        const receiver = await connection.getAccountInfo(fromATA);
+        const receiver = await connection.getAccountInfo(protocolATA);
 
         if (receiver == null) {
             tx.add(
                 createAssociatedTokenAccountInstruction (
                     signer.publicKey,
-                    fromATA,
-                    signer.publicKey,
+                    protocolATA,
+                    protocol.publicKey,
                     repMint.publicKey
                 )
             )
@@ -90,7 +92,7 @@ describe('agora-court', () => {
         tx.add(
             createMintToInstruction(
                 repMint.publicKey,
-                fromATA,
+                protocolATA,
                 mintAuthority.publicKey,
                 5 * LAMPORTS_PER_MINT
             )
@@ -100,6 +102,7 @@ describe('agora-court', () => {
         tx.add(
             await agoraProgram.methods
             .initializeDispute(
+                courtName,
                 [null, null],
                 {
                     graceEndsAt: new anchor.BN((cur_time + (20*60))), //20 min to interact
@@ -116,13 +119,13 @@ describe('agora-court', () => {
             )
             .accounts({
                 dispute: disputePDA,
-                repVault: rep_vault_ata,
+                repVault: repVaultATA,
                 payVault: agoraProgram.programId,
                 court: courtPDA,
                 payer: signer.publicKey,
-                protocol: signer.publicKey,
+                protocol: protocol.publicKey,
+                protocolRepAta: protocolATA,
                 protocolPayAta: agoraProgram.programId,
-                protocolRepAta: fromATA,
                 repMint: repMint.publicKey,
                 payMint: agoraProgram.programId,
                 systemProgram: SystemProgram.programId,
@@ -132,7 +135,7 @@ describe('agora-court', () => {
             .instruction()
         )
 
-        await provider.sendAndConfirm(tx, [mintAuthority]);
+        await provider.sendAndConfirm(tx, [mintAuthority, protocol]);
 
         //set dispute ID in config
         setDispute(courtState.numDisputes);
@@ -144,6 +147,6 @@ describe('agora-court', () => {
             console.log(key, ":", disputeState.config[key].toNumber().toString());
         }
         console.log("Dispute: ", disputeState);
-        console.log("To ATA: ", rep_vault_ata); //should have balance 5
+        console.log("To ATA: ", repVaultATA); //should have balance 5
     });
 });

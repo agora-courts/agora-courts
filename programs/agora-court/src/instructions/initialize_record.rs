@@ -2,7 +2,7 @@
 use crate::state::{VoterRecord, Court};
 use anchor_lang::prelude::*;
 
-pub fn initialize_record(ctx: Context<InitializeRecord>) -> Result<()> {
+pub fn initialize_record(ctx: Context<InitializeRecord>, _court_name: String) -> Result<()> {
     let reputation = &mut ctx.accounts.record;
     let bump = *ctx.bumps.get("record").unwrap();
     reputation.set_inner(VoterRecord {
@@ -15,6 +15,7 @@ pub fn initialize_record(ctx: Context<InitializeRecord>) -> Result<()> {
 }
 
 #[derive(Accounts)]
+#[instruction(_court_name: String)]
 pub struct InitializeRecord<'info> {
     #[account(
         init,
@@ -26,13 +27,10 @@ pub struct InitializeRecord<'info> {
     pub record: Account<'info, VoterRecord>,
 
     #[account(
-        seeds = ["court".as_bytes(), court_authority.key().as_ref()],
+        seeds = ["court".as_bytes(), _court_name.as_bytes()],
         bump = court.bump,
     )]
     pub court: Account<'info, Court>,
-
-    ///CHECK: The creator of the court should not need to sign here - it won't be the right court anyway if wrong address passed
-    pub court_authority: UncheckedAccount<'info>,
 
     #[account(mut)]
     pub payer: Signer<'info>,

@@ -735,15 +735,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "demo-tokens"
-version = "0.1.0"
-dependencies = [
- "agora-court",
- "anchor-lang",
- "anchor-spl",
-]
-
-[[package]]
 name = "derivation-path"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

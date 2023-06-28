@@ -8,7 +8,7 @@ use anchor_lang::prelude::*;
 //in our prev implementation, the binary heap made perfect sense. It was to limit a user's exposure to disputes.
 //but now, with pre-dispute staking, that should be done in the interact section? TBD.
 
-pub fn initialize_case(ctx: Context<InitializeCase>, dispute_id: u64, evidence: String) -> Result<()> {
+pub fn initialize_case(ctx: Context<InitializeCase>, _court_name: String, dispute_id: u64, evidence: String) -> Result<()> {
     let dispute = &mut ctx.accounts.dispute;
     let voter_record = &mut ctx.accounts.voter_record;
 
@@ -48,7 +48,7 @@ pub fn initialize_case(ctx: Context<InitializeCase>, dispute_id: u64, evidence: 
 }
 
 #[derive(Accounts)]
-#[instruction(dispute_id: u64, evidence: String)]
+#[instruction(_court_name: String, dispute_id: u64, evidence: String)]
 pub struct InitializeCase<'info> {
     //a single user's case
     #[account(
@@ -85,13 +85,11 @@ pub struct InitializeCase<'info> {
     pub dispute: Account<'info, Dispute>,
 
     #[account(
-        seeds = ["court".as_bytes(), court_authority.key().as_ref()],
+        seeds = ["court".as_bytes(), _court_name.as_bytes()],
         bump = court.bump,
     )]
     pub court: Account<'info, Court>,
-
-    /// CHECK: The creator of the court should not need to sign here - it won't be the right court anyway if wrong address passed
-    pub court_authority: UncheckedAccount<'info>,
+    
     #[account(mut)]
     pub payer: Signer<'info>, // user adding their case
     pub system_program: Program<'info, System>,

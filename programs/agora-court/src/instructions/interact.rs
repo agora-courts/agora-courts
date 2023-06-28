@@ -17,6 +17,7 @@ use anchor_spl::{token::{Mint, TokenAccount, transfer, Token, Transfer}, associa
 
 pub fn interact(
     ctx: Context<Interact>,
+    _court_name: String,
     _dispute_id: u64
 ) -> Result<()> {
     //checking timing
@@ -126,7 +127,7 @@ pub fn interact(
 
 
 #[derive(Accounts)]
-#[instruction(_dispute_id: u64)]
+#[instruction(_court_name: String, _dispute_id: u64)]
 pub struct Interact<'info> {
     #[account(
         mut,
@@ -157,16 +158,19 @@ pub struct Interact<'info> {
     pub record: Box<Account<'info, VoterRecord>>,
 
     #[account(
-        mut,
-        seeds = ["court".as_bytes(), court_authority.key().as_ref()],
+        seeds = ["court".as_bytes(), _court_name.as_bytes()],
         bump = court.bump,
     )]
     pub court: Box<Account<'info, Court>>,
 
-    /// CHECK: The creator of the court should not need to sign here - it won't be the right court anyway if wrong address passed
-    pub court_authority: UncheckedAccount<'info>,
     #[account(mut)]
     pub user: Signer<'info>,
+    #[account(
+        mut,
+        associated_token::mint = rep_mint,
+        associated_token::authority = user,
+    )]
+    pub user_rep_ata: Option<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
@@ -174,13 +178,6 @@ pub struct Interact<'info> {
         associated_token::authority = user
     )]
     pub user_pay_ata: Option<Account<'info, TokenAccount>>,
-
-    #[account(
-        mut,
-        associated_token::mint = rep_mint,
-        associated_token::authority = user,
-    )]
-    pub user_rep_ata: Option<Account<'info, TokenAccount>>,
 
     #[account(
         constraint = rep_mint.key() == court.rep_mint @ InputError::ReputationMintMismatch

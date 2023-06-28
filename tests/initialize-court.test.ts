@@ -2,32 +2,34 @@ import * as anchor from '@coral-xyz/anchor';
 import { Program } from '@coral-xyz/anchor';
 import { PublicKey, SystemProgram, Keypair, Transaction, Connection, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { expect } from 'chai';
-import { AgoraCourt } from '../../target/types/agora_court';
-import { TOKEN_PROGRAM_ID, 
+import { AgoraCourt } from '../target/types/agora_court';
+import { 
+    TOKEN_PROGRAM_ID, 
     createInitializeMint2Instruction,
     MINT_SIZE,
     getMinimumBalanceForRentExemptMint
 } from "@solana/spl-token";
-import { setMint } from './config';
+import { setMint } from './utils';
+import { networkURL, maxDisputeVotes, decimals, courtName } from './config';
 
 describe('agora-court', () => {
     //find the provider and set the anchor provider
     const provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
-    const connection = new Connection("https://api.devnet.solana.com");
+    const connection = new Connection(networkURL);
 
     //get the current program and provider from the IDL
     const agoraProgram = anchor.workspace.AgoraCourt as Program<AgoraCourt>;
     const agoraProvider = agoraProgram.provider as anchor.AnchorProvider;
 
     //test parameters
-    const decimals = 9;
-    const max_dispute_votes = 9;
     const mintAuthority = Keypair.generate();
     const repMint = Keypair.generate();
+    const protocol = Keypair.generate();
 
     console.log("Mint Authority Pubkey: ", mintAuthority.publicKey.toString());
     console.log("Mint Pubkey: ", repMint.publicKey.toString());
+    console.log("Protocol Pubkey: ", protocol.publicKey.toString());
 
     it('initialize_court!', async () => {
         //signer is just the wallet
@@ -37,7 +39,7 @@ describe('agora-court', () => {
         //airdrop 1 SOL for fees
         const airdropSignature = await connection.requestAirdrop(
             mintAuthority.publicKey,
-            1*LAMPORTS_PER_SOL,
+            2*LAMPORTS_PER_SOL,
         );
         const latestBlockHash = await connection.getLatestBlockhash();
         await connection.confirmTransaction({
@@ -45,6 +47,14 @@ describe('agora-court', () => {
             lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
             signature: airdropSignature,
         });
+
+        tx.add(
+            SystemProgram.transfer({
+                fromPubkey: mintAuthority.publicKey,
+                lamports: 1*LAMPORTS_PER_SOL,
+                toPubkey: protocol.publicKey,
+            })
+        )
 
         //create a new mint for testing
         tx.add(
@@ -68,7 +78,7 @@ describe('agora-court', () => {
             .findProgramAddressSync(
                 [
                     anchor.utils.bytes.utf8.encode("court"),
-                    provider.wallet.publicKey.toBuffer(),
+                    anchor.utils.bytes.utf8.encode(courtName),
                 ],
                 agoraProgram.programId
             );
@@ -77,14 +87,15 @@ describe('agora-court', () => {
         tx.add(
             await agoraProgram.methods
             .initializeCourt(
+                courtName,
                 repMint.publicKey,
                 null,
-                max_dispute_votes
+                maxDisputeVotes
             )
             .accounts({
                 court: courtPDA,
-                payer: signer.publicKey,
-                protocol: signer.publicKey,
+                authority: signer.publicKey,
+                protocol: protocol.publicKey,
                 systemProgram: SystemProgram.programId,
             })
             .instruction()
@@ -96,12 +107,14 @@ describe('agora-court', () => {
 
         let courtState = await agoraProgram.account.court.fetch(courtPDA);
 
-        expect(courtState.maxDisputeVotes).to.equal(max_dispute_votes);
+        expect(courtState.maxDisputeVotes).to.equal(maxDisputeVotes);
+
+        console.log("Court State: ", courtState);
 
         console.log("Num Disputes (BN): ", courtState.numDisputes.toNumber().toString());
         console.log("stored_rep_mint: ", courtState.repMint.toString());
         console.log("stored_pay_mint (null): ", courtState.payMint);
 
-        setMint(mintAuthority, repMint, decimals);
+        setMint(protocol, mintAuthority, repMint, decimals);
     });
 });

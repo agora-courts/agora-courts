@@ -2,15 +2,16 @@ import * as anchor from '@coral-xyz/anchor';
 import { Program } from '@coral-xyz/anchor';
 import { PublicKey, SystemProgram, Keypair, Connection, LAMPORTS_PER_SOL, Transaction } from '@solana/web3.js';
 import { expect } from 'chai';
-import { AgoraCourt } from '../../target/types/agora_court';
-import { createUsers } from './config';
+import { AgoraCourt } from '../target/types/agora_court';
+import { createUsers } from './utils';
+import { courtName, networkURL } from './config';
 
 describe('agora-court', () => {
     //find the provider and set the anchor provider
     const provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
 
-    const connection = new Connection("https://api.devnet.solana.com");
+    const connection = new Connection(networkURL);
 
     //get the current program and provider from the IDL
     const agoraProgram = anchor.workspace.AgoraCourt as Program<AgoraCourt>;
@@ -44,7 +45,7 @@ describe('agora-court', () => {
             .findProgramAddressSync(
                 [
                     anchor.utils.bytes.utf8.encode("court"),
-                    provider.wallet.publicKey.toBuffer(),
+                    anchor.utils.bytes.utf8.encode(courtName),
                 ],
                 agoraProgram.programId
             );
@@ -84,12 +85,11 @@ describe('agora-court', () => {
         tx.add(
             await agoraProgram.methods
                 .initializeRecord(
-
+                    courtName
                 )
                 .accounts({
                     record: recordOnePDA,
                     court: courtPDA,
-                    courtAuthority: signer.publicKey,
                     payer: user_one.publicKey,
                     systemProgram: SystemProgram.programId
                 })
@@ -121,11 +121,11 @@ describe('agora-court', () => {
         tx.add(
             await agoraProgram.methods
                 .initializeRecord(
+                    courtName
                 )
                 .accounts({
                     record: recordTwoPDA,
                     court: courtPDA,
-                    courtAuthority: signer.publicKey,
                     payer: user_two.publicKey,
                     systemProgram: SystemProgram.programId
                 })
@@ -135,11 +135,11 @@ describe('agora-court', () => {
                 .instruction(),
             await agoraProgram.methods
                 .initializeRecord(
+                    courtName
                 )
                 .accounts({
                     record: recordThreePDA,
                     court: courtPDA,
-                    courtAuthority: signer.publicKey,
                     payer: user_three.publicKey,
                     systemProgram: SystemProgram.programId
                 })

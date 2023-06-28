@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, Mint, TokenAccount, self};
 use anchor_spl::associated_token::AssociatedToken;
 
-pub fn select_vote(ctx: Context<SelectVote>, dispute_id: u64) -> Result<()> {
+pub fn select_vote(ctx: Context<SelectVote>, _court_name: String, dispute_id: u64) -> Result<()> {
     let dispute = &mut ctx.accounts.dispute;
     let voter_record = &mut ctx.accounts.voter_record;
     let user_ata = &mut ctx.accounts.user_rep_ata;
@@ -56,7 +56,7 @@ pub fn select_vote(ctx: Context<SelectVote>, dispute_id: u64) -> Result<()> {
 }
 
 #[derive(Accounts)]
-#[instruction(dispute_id: u64)]
+#[instruction(_court_name: String, dispute_id: u64)]
 pub struct SelectVote<'info> {
     //a single user's case
     #[account(
@@ -97,18 +97,16 @@ pub struct SelectVote<'info> {
     pub rep_vault: Account<'info, TokenAccount>,
 
     #[account(
-        seeds = ["court".as_bytes(), court_authority.key().as_ref()],
+        seeds = ["court".as_bytes(), _court_name.as_bytes()],
         bump = court.bump,
     )]
-    pub court: Account<'info, Court>,
+    pub court: Box<Account<'info, Court>>,
 
     #[account(
         constraint = rep_mint.key() == court.rep_mint @ InputError::ReputationMintMismatch
     )]
     pub rep_mint: Box<Account<'info, Mint>>,
 
-    /// CHECK: The creator of the court should not need to sign here - it won't be the right court anyway if wrong address passed
-    pub court_authority: UncheckedAccount<'info>,
     #[account(mut)]
     pub payer: Signer<'info>, // user voting
 

@@ -1,8 +1,9 @@
 import * as anchor from '@coral-xyz/anchor';
 import { Program } from '@coral-xyz/anchor';
 import { PublicKey, SystemProgram, Transaction, Connection } from '@solana/web3.js';
-import { AgoraCourt } from '../../target/types/agora_court';
-import { getDisputeID, getSingleUser } from "./config"
+import { AgoraCourt } from '../target/types/agora_court';
+import { getDisputeID, getSingleUser } from "./utils"
+import { courtName, networkURL } from './config';
 
 //MUST SET USER CORRECTLY IN CONFIG TO CALL MORE THAN ONCE
 
@@ -15,7 +16,7 @@ describe('agora-court', () => {
     const provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
 
-    const connection = new Connection("https://api.devnet.solana.com");
+    const connection = new Connection(networkURL);
 
     //get the current program and provider from the IDL
     const agoraProgram = anchor.workspace.AgoraCourt as Program<AgoraCourt>;
@@ -31,7 +32,7 @@ describe('agora-court', () => {
             .findProgramAddressSync(
                 [
                     anchor.utils.bytes.utf8.encode("court"),
-                    provider.wallet.publicKey.toBuffer(),
+                    anchor.utils.bytes.utf8.encode(courtName),
                 ],
                 agoraProgram.programId
             );
@@ -68,6 +69,7 @@ describe('agora-court', () => {
 
         await agoraProgram.methods
             .initializeCase(
+                courtName,
                 disputeId,
                 "I did not do it, please trust me guys."
             )
@@ -76,7 +78,6 @@ describe('agora-court', () => {
                 voterRecord: recordPDA,
                 dispute: disputePDA,
                 court: courtPDA,
-                courtAuthority: signer.publicKey,
                 payer: user.publicKey,
                 systemProgram: SystemProgram.programId
             })

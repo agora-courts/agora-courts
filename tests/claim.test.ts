@@ -1,11 +1,12 @@
 import * as anchor from '@coral-xyz/anchor';
 import { Program } from '@coral-xyz/anchor';
 import { PublicKey, SystemProgram, Connection } from '@solana/web3.js';
-import { AgoraCourt } from '../../target/types/agora_court';
+import { AgoraCourt } from '../target/types/agora_court';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, 
     getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
-import { getMintInfo, getDisputeID, getSingleUser } from "./config"
+import { getMintInfo, getDisputeID, getSingleUser } from "./utils"
+import { courtName, networkURL } from './config';
 
 //MUST SET USER CORRECTLY IN CONFIG TO CALL MORE THAN ONCE
 
@@ -19,7 +20,7 @@ describe('agora-court', () => {
     const provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
 
-    const connection = new Connection("https://api.devnet.solana.com");
+    const connection = new Connection(networkURL);
 
     //get the current program and provider from the IDL
     const agoraProgram = anchor.workspace.AgoraCourt as Program<AgoraCourt>;
@@ -37,7 +38,7 @@ describe('agora-court', () => {
             .findProgramAddressSync(
                 [
                     anchor.utils.bytes.utf8.encode("court"),
-                    provider.wallet.publicKey.toBuffer(),
+                    anchor.utils.bytes.utf8.encode(courtName),
                 ],
                 agoraProgram.programId
             );
@@ -86,14 +87,16 @@ describe('agora-court', () => {
         console.log("Rep ATA: ", rep_vault_ata.toString());
 
         await agoraProgram.methods
-            .claim(disputeId)
+            .claim(
+                courtName,
+                disputeId
+            )
             .accounts({
                 voterRecord: recordPDA,
                 dispute: disputePDA,
                 repVault: rep_vault_ata,
                 payVault: agoraProgram.programId, //None
                 court: courtPDA,
-                courtAuthority: signer.publicKey,
                 user: user.publicKey,
                 userPayAta: agoraProgram.programId, //None
                 userRepAta: fromATA,

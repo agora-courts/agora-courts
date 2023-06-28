@@ -1,5 +1,6 @@
 import { Keypair } from '@solana/web3.js';
 import * as anchor from '@coral-xyz/anchor';
+import { user } from './config';
 import fs from 'fs';
 
 const fileName = __dirname + '/keys.json';
@@ -7,6 +8,7 @@ const fileName = __dirname + '/keys.json';
 //SET CORRECT USER FOR TESTS IN THE LAST FUNCTION
 
 interface Config {
+  protocolSecret: Uint8Array,
   mintAuthSecret: Uint8Array,
   repMintSecret: Uint8Array,
   disputeId: string, //BN toJSON()
@@ -16,17 +18,22 @@ interface Config {
   voterSecret: Uint8Array
 }
 
-export function setMint(auth: Keypair, mint: Keypair, dec: number) {
+export function setMint(protocol: Keypair, auth: Keypair, mint: Keypair, dec: number) {
+    console.log("PROTOCOL SECRET: ", protocol.secretKey);
     console.log("MINT AUTH SECRET: ", auth.secretKey);
     console.log("REP MINT SECRET: ", mint.secretKey);
     console.log("Decimals: ", dec);
 
-    const configContents = fs.readFileSync(fileName, 'utf8');
-
-    const config: Config = JSON.parse(configContents);
-    config.mintAuthSecret = auth.secretKey;
-    config.repMintSecret = mint.secretKey;
-    config.decimals = dec;
+    const config: Config = {
+      protocolSecret: protocol.secretKey,
+      mintAuthSecret: auth.secretKey,
+      repMintSecret: mint.secretKey,
+      disputeId: "",
+      decimals: dec,
+      userOneSecret: new Uint8Array(),
+      userTwoSecret: new Uint8Array(),
+      voterSecret: new Uint8Array()
+    };
 
     fs.writeFileSync(fileName, JSON.stringify(config, null, 2));
 }
@@ -61,11 +68,33 @@ export function getMintInfo(): [Keypair, Keypair, number] {
   const configContents = fs.readFileSync(fileName, 'utf8');
   const config: Config = JSON.parse(configContents);
 
-  let mintAuthority = Keypair.fromSecretKey(config.mintAuthSecret);
-  let repMint = Keypair.fromSecretKey(config.repMintSecret);
+  let mintAuthArr = [];
+  let repMintArr = [];
+  for (const key in config.mintAuthSecret) {
+    mintAuthArr.push(config.mintAuthSecret[key]);
+  }
+
+  for (const key in config.repMintSecret) {
+    repMintArr.push(config.mintAuthSecret[key])
+  }
+
+  let mintAuthority = Keypair.fromSecretKey(Uint8Array.from(mintAuthArr));
+  let repMint = Keypair.fromSecretKey(Uint8Array.from(repMintArr));
   let decimals = config.decimals;
 
   return [mintAuthority, repMint, decimals];
+}
+
+export function getProtocol(): Keypair {
+  const configContents = fs.readFileSync(fileName, 'utf8');
+  const config: Config = JSON.parse(configContents);
+
+  let protocolArr = [];
+  for (const key in config.protocolSecret) {
+    protocolArr.push(config.protocolSecret[key]);
+  }
+
+  return Keypair.fromSecretKey(Uint8Array.from(protocolArr));
 }
 
 export function getDisputeID(): anchor.BN {
@@ -81,15 +110,30 @@ export function getUsers(): [Keypair, Keypair, Keypair] {
   const configContents = fs.readFileSync(fileName, 'utf8');
   const config: Config = JSON.parse(configContents);
 
-  let userOne = Keypair.fromSecretKey(config.userOneSecret);
-  let userTwo = Keypair.fromSecretKey(config.userTwoSecret);
-  let voter = Keypair.fromSecretKey(config.voterSecret);
+  let userOneArr = [];
+  let userTwoArr = [];
+  let voterArr = [];
+  for (const key in config.userOneSecret) {
+    userOneArr.push(config.userOneSecret[key]);
+  }
+
+  for (const key in config.userTwoSecret) {
+    userTwoArr.push(config.userTwoSecret[key]);
+  }
+
+  for (const key in config.voterSecret) {
+    voterArr.push(config.voterSecret[key]);
+  }
+
+  let userOne = Keypair.fromSecretKey(Uint8Array.from(userOneArr));
+  let userTwo = Keypair.fromSecretKey(Uint8Array.from(userTwoArr));
+  let voter = Keypair.fromSecretKey(Uint8Array.from(voterArr));
 
   return [userOne, userTwo, voter];
 }
 
 export function getSingleUser(): Keypair {
-  let [userOne, userTwo, voter] = getUsers();
+  let users = getUsers();
 
-  return userTwo; //CHANGE THIS AS NECESSARY FOR TESTING
+  return users[user]; //CHANGE THIS AS NECESSARY FOR TESTING
 }

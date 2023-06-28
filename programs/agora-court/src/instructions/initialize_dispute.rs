@@ -16,6 +16,7 @@ use anchor_spl::{token::{Mint, TokenAccount, transfer, Token}, associated_token:
 
 pub fn initialize_dispute(
     ctx: Context<InitializeDispute>,
+    _court_name: String,
     users: Vec<Option<Pubkey>>,
     config: DisputeConfiguration
 ) -> Result<()> {
@@ -96,7 +97,7 @@ pub fn initialize_dispute(
 
 
 #[derive(Accounts)]
-#[instruction(users: Vec<Option<Pubkey>>, config: DisputeConfiguration)]
+#[instruction(_court_name: String, users: Vec<Option<Pubkey>>, config: DisputeConfiguration)]
 pub struct InitializeDispute<'info> {
     #[account(
         init,
@@ -125,23 +126,19 @@ pub struct InitializeDispute<'info> {
 
     #[account(
         mut,
-        seeds = ["court".as_bytes(), protocol.key().as_ref()],
-        bump = court.bump,
+        seeds = ["court".as_bytes(), _court_name.as_bytes()],
+        bump = court.bump
     )]
     pub court: Box<Account<'info, Court>>,
 
     #[account(mut)]
     pub payer: Signer<'info>, //payer may be the same as protocol, but not when PDA
 
-    #[account(mut)]
-    pub protocol: Signer<'info>, // protocol that makes CPI needs to sign again
-
     #[account(
         mut,
-        associated_token::mint = pay_mint,
-        associated_token::authority = protocol
+        constraint = protocol.key() == court.protocol
     )]
-    pub protocol_pay_ata: Option<Account<'info, TokenAccount>>,
+    pub protocol: Signer<'info>, // protocol that makes CPI needs to sign again
 
     #[account(
         mut,
@@ -149,6 +146,13 @@ pub struct InitializeDispute<'info> {
         associated_token::authority = protocol
     )]
     pub protocol_rep_ata: Option<Account<'info, TokenAccount>>,
+
+    #[account(
+        mut,
+        associated_token::mint = pay_mint,
+        associated_token::authority = protocol
+    )]
+    pub protocol_pay_ata: Option<Account<'info, TokenAccount>>,
 
     #[account(
         constraint = rep_mint.key() == court.rep_mint @ InputError::ReputationMintMismatch

@@ -17,7 +17,7 @@ use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
 //of course, for v2, need to prevent public visibility of current vote counts
 //the claim queue only holds timestamps, not the status enum, which may delay claims unnecessarily.
 
-pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
+pub fn claim(ctx: Context<Claim>, _court_name: String, _dispute_id: u64) -> Result<()> {
     let dispute = &mut ctx.accounts.dispute;
     let dispute_rep_ata = &mut ctx.accounts.rep_vault;
     let voter_record = &mut ctx.accounts.voter_record;
@@ -124,7 +124,7 @@ pub fn claim(ctx: Context<Claim>, _dispute_id: u64) -> Result<()> {
 }
 
 #[derive(Accounts)]
-#[instruction(_dispute_id: u64)]
+#[instruction(_court_name: String, _dispute_id: u64)]
 pub struct Claim<'info> {
 
     #[account(
@@ -160,13 +160,10 @@ pub struct Claim<'info> {
     pub pay_vault: Option<Account<'info, TokenAccount>>,
 
     #[account(
-        seeds = ["court".as_bytes(), court_authority.key().as_ref()],
+        seeds = ["court".as_bytes(), _court_name.as_bytes()],
         bump = court.bump,
     )]
     pub court: Box<Account<'info, Court>>,
-
-    /// CHECK: The creator of the court should not need to sign here - it won't be the right court anyway if wrong address passed
-    pub court_authority: UncheckedAccount<'info>,
 
     #[account(mut)]
     pub user: Signer<'info>,

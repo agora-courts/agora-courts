@@ -18,7 +18,7 @@ pub struct CloseDispute<'info> {
     )]
     pub dispute: Account<'info, Dispute>,
 
-    /// CHECK: The creator of the court should not need to sign here - it won't be the right court anyway if wrong address passed
+    /// CHECK: The creator of the court should not need to be verified - it won't be the right court anyway if wrong address passed
     pub court: UncheckedAccount<'info>,
 
     #[account(mut)]

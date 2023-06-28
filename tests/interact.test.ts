@@ -1,48 +1,44 @@
 import * as anchor from '@coral-xyz/anchor';
 import { Program } from '@coral-xyz/anchor';
 import { PublicKey, SystemProgram, Transaction, Connection } from '@solana/web3.js';
-import { AgoraCourt } from '../../target/types/agora_court';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, 
+import { AgoraCourt } from '../target/types/agora_court';
+import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID,
     createAssociatedTokenAccountInstruction, 
     createMintToInstruction,
     getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
-import { getMintInfo, getDisputeID, getSingleUser, getUsers } from "./config";
+import { getMintInfo, getSingleUser, getDisputeID } from "./utils";
+import { courtName, networkURL } from './config';
 
-//MUST SET USER CORRECTLY IN CONFIG TO VOTE FOR RIGHT PERSON
+//MUST SET USER CORRECTLY IN CONFIG TO CALL MORE THAN ONCE
 
 describe('agora-court', () => {
     //get keys and info
-    let [mintAuthority, repMint, decimals] = getMintInfo();
-    let disputeId = getDisputeID();
-    let candidate = getSingleUser();
-    let [_a, _b, voter] = getUsers();
+    const [mintAuthority, repMint, decimals] = getMintInfo();
+    const user = getSingleUser();
+    const disputeId = getDisputeID();
 
     //find the provider and set the anchor provider
     const provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
-
-    const connection = new Connection("https://api.devnet.solana.com");
+    const connection = new Connection(networkURL);
 
     //get the current program and provider from the IDL
     const agoraProgram = anchor.workspace.AgoraCourt as Program<AgoraCourt>;
     const agoraProvider = agoraProgram.provider as anchor.AnchorProvider;
 
-    //test specific information
-    console.log("mint auth: ", mintAuthority.publicKey.toString());
-    console.log("repmint: ", repMint.publicKey.toString());
-
-    it('vote!', async () => {
+    it('interact!', async () => {
         //signer is just the wallet
         const signer = agoraProvider.wallet;
         let tx = new Transaction();
+        let LAMPORTS_PER_MINT = Math.pow(10, decimals);
 
         //find PDAs
         const [courtPDA, ] = PublicKey
             .findProgramAddressSync(
                 [
                     anchor.utils.bytes.utf8.encode("court"),
-                    provider.wallet.publicKey.toBuffer(),
+                    anchor.utils.bytes.utf8.encode(courtName),
                 ],
                 agoraProgram.programId
             );
@@ -62,23 +58,21 @@ describe('agora-court', () => {
                 [
                     anchor.utils.bytes.utf8.encode("record"),
                     courtPDA.toBuffer(),
-                    voter.publicKey.toBuffer(),
+                    user.publicKey.toBuffer(),
                 ],
                 agoraProgram.programId
             );
 
-        const [casePDA, ] = PublicKey
-            .findProgramAddressSync(
-                [
-                    anchor.utils.bytes.utf8.encode("case"),
-                    disputePDA.toBuffer(),
-                    candidate.publicKey.toBuffer()
-                ],
-                agoraProgram.programId
-            );
+        //find user and dispute specific ATA
+        const userRepATA = getAssociatedTokenAddressSync(
+            repMint.publicKey,
+            user.publicKey,
+            false,
+            TOKEN_PROGRAM_ID,
+            ASSOCIATED_TOKEN_PROGRAM_ID
+        );
 
-        //dispute & voter rep vault
-        const repVault = getAssociatedTokenAddressSync(
+        const repVaultATA = getAssociatedTokenAddressSync(
             repMint.publicKey,
             disputePDA,
             true,
@@ -86,22 +80,13 @@ describe('agora-court', () => {
             ASSOCIATED_TOKEN_PROGRAM_ID
         );
 
-        const userRepATA = getAssociatedTokenAddressSync(
-            repMint.publicKey,
-            voter.publicKey,
-            false,
-            TOKEN_PROGRAM_ID,
-            ASSOCIATED_TOKEN_PROGRAM_ID
-        );
-
         const receiver = await connection.getAccountInfo(userRepATA);
-
         if (receiver == null) {
             tx.add(
                 createAssociatedTokenAccountInstruction(
                     signer.publicKey,
                     userRepATA,
-                    voter.publicKey,
+                    user.publicKey,
                     repMint.publicKey,
                     TOKEN_PROGRAM_ID,
                     ASSOCIATED_TOKEN_PROGRAM_ID
@@ -109,55 +94,58 @@ describe('agora-court', () => {
             )
         }
 
-        //voter needs 5 rep
-        let LAMPORTS_PER_MINT = Math.pow(10, decimals);
+        //mint to user ATA bc there is a rep cost
         tx.add(
             createMintToInstruction(
                 repMint.publicKey,
                 userRepATA,
-                mintAuthority.publicKey,
-                10*LAMPORTS_PER_MINT,
+                mintAuthority.publicKey, //signer
+                15 * LAMPORTS_PER_MINT
             )
-        );
+        )
 
-        console.log("Voter Pubkey: ", voter.publicKey.toString());
-        console.log("Voter ATA: ", userRepATA.toString());
-        console.log("Rep Vault: ", repVault.toString());
-
+        //console log accounts
+        console.log("disputePDA: ", disputePDA.toString());
+        console.log("repVault: ", repVaultATA.toString());
+        console.log("recordPDA: ", recordPDA.toString());
+        console.log("userRepATA: ", userRepATA.toString());
+        console.log("user: ", user.publicKey.toString());
+        
         tx.add(
             await agoraProgram.methods
-                .selectVote(
-                    disputeId,
+                .interact(
+                    courtName,
+                    disputeId
                 )
                 .accounts({
-                    case: casePDA,
-                    candidate: candidate.publicKey,
-                    voterRecord: recordPDA,
                     dispute: disputePDA,
-                    repVault: repVault,
+                    repVault: repVaultATA,
+                    payVault: agoraProgram.programId, //None
+                    record: recordPDA,
                     court: courtPDA,
-                    repMint: repMint.publicKey,
-                    courtAuthority: signer.publicKey,
-                    payer: voter.publicKey,
+                    user: user.publicKey, //signer
                     userRepAta: userRepATA,
+                    userPayAta: agoraProgram.programId, //None
+                    repMint: repMint.publicKey,
+                    payMint: agoraProgram.programId, //None
                     systemProgram: SystemProgram.programId,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID
                 })
                 .signers(
-                    [voter]
+                    [user]
                 )
                 .instruction()
         );
 
-        await provider.sendAndConfirm(tx, [voter, mintAuthority]);
+        await provider.sendAndConfirm(tx, [mintAuthority, user]);
 
         let disputeState = await agoraProgram.account.dispute.fetch(disputePDA);
-        let caseState = await agoraProgram.account.case.fetch(casePDA);
         let recordState = await agoraProgram.account.voterRecord.fetch(recordPDA);
-
-        console.log("Total Votes: ", disputeState.votes);
-        console.log("Case Votes: ", caseState.votes);
-        console.log("Record: ", recordState.claimQueue);
+        console.log("total interactions: ", disputeState.interactions);
+        console.log("dispute.users: ", disputeState.users); //should include most recent interactor
+        console.log("currently staked reputation: ", recordState.currentlyStakedRep.toNumber().toString(), " , pay: ", recordState.currentlyStakedPay.toNumber().toString());
+        console.log("user_rep_ata: ", userRepATA.toString()); //should have 5 tokens
+        console.log("rep_vault: ", repVaultATA.toString()); //should have received 15 tokens
     });
 });
