@@ -49,7 +49,7 @@ pub mod agora_court {
         users: Vec<Option<Pubkey>>,
         config: DisputeConfiguration,
     ) -> Result<()> {
-        instructions::initialize_dispute(ctx, court_name,  users, config)
+        instructions::initialize_dispute(ctx, court_name, users, config)
     }
 
     pub fn select_vote(

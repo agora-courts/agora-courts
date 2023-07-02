@@ -5,11 +5,14 @@ skip-lint = false
 [programs.devnet]
 agora_court = "ABkQZCq2qh32X75A5FjaT8FGRWEqujPiBV3wJZEmzuEX"
 
+[programs.localnet]
+agora_court = "ABkQZCq2qh32X75A5FjaT8FGRWEqujPiBV3wJZEmzuEX"
+
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "/home/vsiva360/.config/solana/id.json"
 
 [scripts]

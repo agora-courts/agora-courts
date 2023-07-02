@@ -15,6 +15,8 @@ describe('agora-court', () => {
     const [mintAuthority, repMint, decimals] = getMintInfo();
     const protocol = getProtocol();
 
+    console.log("MintAuth, RepMint, ProtMint: \n", mintAuthority.publicKey.toString(), "\n", repMint.publicKey.toString(), "\n", protocol.publicKey.toString())
+
     //find the provider and set the anchor provider
     const provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
@@ -78,7 +80,9 @@ describe('agora-court', () => {
                     signer.publicKey,
                     protocolATA,
                     protocol.publicKey,
-                    repMint.publicKey
+                    repMint.publicKey,
+                    TOKEN_PROGRAM_ID,
+                    ASSOCIATED_TOKEN_PROGRAM_ID
                 )
             )
         }
@@ -134,6 +138,10 @@ describe('agora-court', () => {
             })
             .instruction()
         )
+
+        console.log("SYSPROG: ", SystemProgram.programId.toString())
+        console.log("TOKENPROG: ", TOKEN_PROGRAM_ID.toString())
+        console.log("ATAPROG: ", ASSOCIATED_TOKEN_PROGRAM_ID.toString())
 
         await provider.sendAndConfirm(tx, [mintAuthority, protocol]);
 

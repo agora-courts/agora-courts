@@ -75,7 +75,7 @@ export function getMintInfo(): [Keypair, Keypair, number] {
   }
 
   for (const key in config.repMintSecret) {
-    repMintArr.push(config.mintAuthSecret[key])
+    repMintArr.push(config.repMintSecret[key])
   }
 
   let mintAuthority = Keypair.fromSecretKey(Uint8Array.from(mintAuthArr));
