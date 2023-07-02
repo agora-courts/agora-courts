@@ -136,7 +136,7 @@ pub struct InitializeDispute<'info> {
 
     #[account(
         mut,
-        constraint = protocol.key() == court.protocol
+        constraint = protocol.key() == court.protocol @ InputError::InvalidProtocol
     )]
     pub protocol: Signer<'info>, // protocol that makes CPI needs to sign again
 

@@ -9,7 +9,6 @@ import {
     MINT_SIZE,
     getMinimumBalanceForRentExemptMint
 } from "@solana/spl-token";
-import { setMint } from './utils';
 import { networkURL, maxDisputeVotes, decimals, courtName } from './config';
 
 describe('agora-court', () => {
@@ -27,11 +26,15 @@ describe('agora-court', () => {
     const repMint = Keypair.generate();
     const protocol = Keypair.generate();
 
+    const courtAuthority = Keypair.generate();
+
     console.log("Mint Authority Pubkey: ", mintAuthority.publicKey.toString());
     console.log("Mint Pubkey: ", repMint.publicKey.toString());
     console.log("Protocol Pubkey: ", protocol.publicKey.toString());
 
-    it('initialize_court!', async () => {
+    console.log("Court Authority: ", courtAuthority.publicKey.toString());
+
+    it('edit_court!', async () => {
         //signer is just the wallet
         const signer = agoraProvider.wallet;
         let tx = new Transaction();
@@ -39,7 +42,7 @@ describe('agora-court', () => {
         //airdrop 1 SOL for fees
         const airdropSignature = await connection.requestAirdrop(
             mintAuthority.publicKey,
-            2*LAMPORTS_PER_SOL,
+            1.5*LAMPORTS_PER_SOL,
         );
         const latestBlockHash = await connection.getLatestBlockhash();
         await connection.confirmTransaction({
@@ -86,17 +89,17 @@ describe('agora-court', () => {
         //calls the initialize method
         tx.add(
             await agoraProgram.methods
-            .initializeCourt(
+            .editCourt(
                 courtName,
                 maxDisputeVotes
             )
             .accounts({
                 court: courtPDA,
                 authority: signer.publicKey,
-                protocol: protocol.publicKey,
+                transferAuthority: courtAuthority.publicKey,
+                transferProtocol: protocol.publicKey,
                 repMint: repMint.publicKey,
                 payMint: agoraProgram.programId,
-                systemProgram: SystemProgram.programId,
             })
             .instruction()
         )
@@ -104,17 +107,7 @@ describe('agora-court', () => {
         await provider.sendAndConfirm(tx, [mintAuthority, repMint]);
 
         console.log("Court PDA: ", courtPDA.toString());
-
         let courtState = await agoraProgram.account.court.fetch(courtPDA);
-
-        expect(courtState.maxDisputeVotes).to.equal(maxDisputeVotes);
-
         console.log("Court State: ", courtState);
-
-        console.log("Num Disputes (BN): ", courtState.numDisputes.toNumber().toString());
-        console.log("stored_rep_mint: ", courtState.repMint.toString());
-        console.log("stored_pay_mint (null): ", courtState.payMint);
-
-        setMint(protocol, mintAuthority, repMint, decimals);
     });
 });

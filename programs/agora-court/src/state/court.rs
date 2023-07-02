@@ -1,4 +1,5 @@
 use crate::tools::anchor::DISCRIMINATOR_SIZE;
+use anchor_spl::token::Mint;
 use anchor_lang::{prelude::*, solana_program::pubkey::PUBKEY_BYTES};
 
 #[account]
@@ -14,4 +15,23 @@ pub struct Court {
 
 impl Court {
     pub const SIZE: usize = DISCRIMINATOR_SIZE + PUBKEY_BYTES + PUBKEY_BYTES + PUBKEY_BYTES + (PUBKEY_BYTES + 1) + 8 + 2 + 1;
+
+    pub fn edit(
+        &mut self, 
+        votes: u16,
+        authority: Pubkey,
+        protocol: Pubkey,
+        rep_mint: Pubkey,
+        pay_mint: &Option<Account<'_, Mint>>,
+    ) {
+        self.max_dispute_votes = votes;
+        self.edit_authority = authority;
+        self.protocol = protocol;
+        self.rep_mint = rep_mint;
+
+        self.pay_mint = match pay_mint {
+            Some(n) => Some(n.key()),
+            None => None
+        };
+    }
 }

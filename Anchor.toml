@@ -25,4 +25,5 @@ initcase = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/initialize-cas
 vote = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/vote.test.ts"
 close = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/close.test.ts"
 claim = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/claim.test.ts"
+editcourt = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/edit-court.test.ts"
 lint = "cargo dylint --all --workspace"

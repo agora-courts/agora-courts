@@ -50,4 +50,8 @@ pub enum InputError {
     ReputationMintMismatch,
     #[msg("Signer is not authorized by the protocol to interact.")]
     UserNotAuthorized,
+    #[msg("Protocol does not own this court.")]
+    InvalidProtocol,
+    #[msg("User does not own this court.")]
+    InvalidEditAuthority,
 }

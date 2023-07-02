@@ -13,15 +13,26 @@ declare_id!("ABkQZCq2qh32X75A5FjaT8FGRWEqujPiBV3wJZEmzuEX");
 pub mod agora_court {
     use super::*;
 
-    pub fn interact(ctx: Context<Interact>, court_name: String, dispute_id: u64) -> Result<()> {
+    pub fn interact(
+        ctx: Context<Interact>, 
+        court_name: String, 
+        dispute_id: u64
+    ) -> Result<()> {
         instructions::interact(ctx, court_name, dispute_id)
     }
 
-    pub fn claim(ctx: Context<Claim>, court_name: String, dispute_id: u64) -> Result<()> {
+    pub fn claim(
+        ctx: Context<Claim>, 
+        court_name: String, 
+        dispute_id: u64
+    ) -> Result<()> {
         instructions::claim(ctx, court_name, dispute_id)
     }
 
-    pub fn close_dispute(ctx: Context<CloseDispute>, dispute_id: u64) -> Result<()> {
+    pub fn close_dispute(
+        ctx: Context<CloseDispute>, 
+        dispute_id: u64
+    ) -> Result<()> {
         instructions::close_dispute(ctx, dispute_id)
     }
 
@@ -36,11 +47,17 @@ pub mod agora_court {
     pub fn initialize_court(
         ctx: Context<InitializeCourt>,
         court_name: String,
-        reputation_mint: Pubkey, 
-        payment_mint: Option<Pubkey>, 
         max_dispute_votes: u16
     ) -> Result<()> {
-        instructions::initialize_court(ctx, court_name, reputation_mint, payment_mint, max_dispute_votes)
+        instructions::initialize_court(ctx, court_name, max_dispute_votes)
+    }
+
+    pub fn edit_court(
+        ctx: Context<EditCourt>,
+        court_name: String,
+        max_dispute_votes: u16
+    ) -> Result<()> {
+        instructions::edit_court(ctx, court_name, max_dispute_votes)
     }
 
     pub fn initialize_dispute(
@@ -60,7 +77,10 @@ pub mod agora_court {
         instructions::select_vote(ctx, court_name, dispute_id)
     }
 
-    pub fn initialize_record(ctx: Context<InitializeRecord>, court_name: String) -> Result<()> {
+    pub fn initialize_record(
+        ctx: Context<InitializeRecord>, 
+        court_name: String
+    ) -> Result<()> {
         instructions::initialize_record(ctx, court_name)
     }
 }

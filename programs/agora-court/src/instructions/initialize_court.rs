@@ -1,21 +1,26 @@
 use crate::state::*;
 use anchor_lang::prelude::*;
+use anchor_spl::token::Mint;
 
 //First IX a protocol would invoke
 
 pub fn initialize_court(
     ctx: Context<InitializeCourt>, 
     _court_name: String,
-    rep_mint: Pubkey,
-    pay_mint: Option<Pubkey>, 
     max_dispute_votes: u16
 ) -> Result<()> {
     let court = &mut ctx.accounts.court;
     let bump = *ctx.bumps.get("court").unwrap();
+
+    let pay_mint = match &ctx.accounts.pay_mint {
+        Some(n) => Some(n.key()),
+        None => None
+    };
+
     court.set_inner(Court {
         edit_authority: ctx.accounts.authority.key(),
         protocol: ctx.accounts.protocol.key(),
-        rep_mint,
+        rep_mint: ctx.accounts.rep_mint.key(),
         pay_mint,
         num_disputes: 0,
         max_dispute_votes,
@@ -27,9 +32,7 @@ pub fn initialize_court(
 
 #[derive(Accounts)]
 #[instruction(
-    _court_name: String,
-    rep_mint: Pubkey,
-    pay_mint: Option<Pubkey>, 
+    _court_name: String, 
     max_dispute_votes: u16
 )]
 pub struct InitializeCourt<'info> {
@@ -46,5 +49,7 @@ pub struct InitializeCourt<'info> {
     pub authority: Signer<'info>, //edit authority signs
     ///CHECK: protocol that makes CPI has to sign for all init_disputes
     pub protocol: UncheckedAccount<'info>,
+    pub rep_mint: Account<'info, Mint>,
+    pub pay_mint: Option<Account<'info, Mint>>,
     pub system_program: Program<'info, System>,
 }

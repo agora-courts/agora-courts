@@ -6,7 +6,7 @@ export const networkURL = localNet;
 
 //Court Config
 export const courtName = "VarunCourt";
-export const maxDisputeVotes = 5;
+export const maxDisputeVotes = 8;
 export const decimals = 9;
 
 //User Select - (0, 1, 2) - there are three users - see README
