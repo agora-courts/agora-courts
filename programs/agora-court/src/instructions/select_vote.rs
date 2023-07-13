@@ -1,25 +1,33 @@
-use crate::{error::InputError, state::{dispute::*, case::*, voter_record::*, Court}};
+use crate::{error::InputError, state::{dispute::*, voter_record::*, Court}};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, Mint, TokenAccount, self};
 use anchor_spl::associated_token::AssociatedToken;
 
-pub fn select_vote(ctx: Context<SelectVote>, _court_name: String, dispute_id: u64) -> Result<()> {
+pub fn select_vote(
+    ctx: Context<SelectVote>, 
+    _court_name: String, 
+    dispute_id: u64,
+    commitment: [u8; 32]
+) -> Result<()> {
     let dispute = &mut ctx.accounts.dispute;
     let voter_record = &mut ctx.accounts.voter_record;
     let user_ata = &mut ctx.accounts.user_rep_ata;
+
     //check timing / status
     dispute.can_vote()?;
-
     msg!("Dispute ID: {}", dispute_id);
+
+    //already voted, update vote and return
+
     //push vote to binary heap
     let dispute_record = DisputeRecord {
         dispute_id,
-        dispute_end_time: dispute.config.ends_at,
-        user_voted_for: ctx.accounts.candidate.key()
+        dispute_end_time: dispute.config.dispute_ends_at,
+        user_voted_for: Vote::Secret { hash: commitment }
     };
     voter_record.push(dispute_record);
 
-    //ensure user balance is good
+    //ensure user balance is sufficient
     let true_balance = voter_record.currently_staked_rep + user_ata.amount;
     if true_balance < dispute.config.voter_rep_required {
         return err!(InputError::UserDoesNotHaveEnoughReputation);
@@ -38,37 +46,19 @@ pub fn select_vote(ctx: Context<SelectVote>, _court_name: String, dispute_id: u6
         );
 
         token::transfer(cpi_ctx, rep_cost)?;
-        voter_record.currently_staked_rep += rep_cost;
-    }
-
-    //increment votes - need to ZK later
-    let case = &mut ctx.accounts.case;
-    case.votes += 1;
-    dispute.votes += 1;
-    if case.votes > dispute.leader.votes {
-        dispute.leader = CaseLeader {
-            user: ctx.accounts.candidate.key(),
-            votes: case.votes
-        }
+        voter_record.currently_staked_pay += rep_cost;
     }
 
     Ok(())
 }
 
 #[derive(Accounts)]
-#[instruction(_court_name: String, dispute_id: u64)]
+#[instruction(
+    _court_name: String,
+    dispute_id: u64,
+    commitment: [u8; 32]
+)]
 pub struct SelectVote<'info> {
-    //a single user's case
-    #[account(
-        mut,
-        seeds = ["case".as_bytes(), dispute.key().as_ref(), candidate.key().as_ref()],
-        bump = case.bump
-    )]
-    pub case: Account<'info, Case>,
-
-    ///CHECK: Case account won't exist if incorrect
-    pub candidate: UncheckedAccount<'info>,
-
     #[account(
         mut,
         seeds = ["record".as_bytes(), court.key().as_ref(), payer.key().as_ref()],
@@ -81,7 +71,6 @@ pub struct SelectVote<'info> {
     )]
     pub voter_record: Account<'info, VoterRecord>,
 
-    //checks case timing and user involvement
     #[account(
         mut,
         seeds = ["dispute".as_bytes(), court.key().as_ref(), dispute_id.to_be_bytes().as_ref()],
@@ -116,7 +105,6 @@ pub struct SelectVote<'info> {
         associated_token::authority = payer,
     )]
     pub user_rep_ata: Account<'info, TokenAccount>,
-
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>

@@ -23,15 +23,15 @@ pub fn initialize_dispute(
     //check end times
     let timestamp = Clock::get().unwrap().unix_timestamp;
     require!(timestamp < config.grace_ends_at, InputError::InvalidEndTime);
-    require!(timestamp < config.init_cases_ends_at, InputError::InvalidEndTime);
-    require!(timestamp < config.ends_at, InputError::InvalidEndTime);
-    require!(config.init_cases_ends_at < config.ends_at && config.grace_ends_at < config.init_cases_ends_at, InputError::InvalidEndTime);
+    require!(config.grace_ends_at < config.init_cases_ends_at, InputError::InvalidEndTime);
+    require!(config.init_cases_ends_at < config.voting_ends_at, InputError::InvalidEndTime);
+    require!(config.voting_ends_at < config.dispute_ends_at, InputError::InvalidEndTime);
     require!(!users.is_empty(), InputError::UsersEmpty);
 
     let provided_rep = config.protocol_rep;
     let provided_pay = config.protocol_pay;
 
-    //set the dispute account with some data
+    //init dispute account with initial data
     let dispute = &mut ctx.accounts.dispute;
     let bump = *ctx.bumps.get("dispute").unwrap();
     dispute.set_inner(Dispute {

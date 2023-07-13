@@ -72,9 +72,19 @@ pub mod agora_court {
     pub fn select_vote(
         ctx: Context<SelectVote>,
         court_name: String,
-        dispute_id: u64
+        dispute_id: u64,
+        commitment: [u8; 32]
     ) -> Result<()> {
-        instructions::select_vote(ctx, court_name, dispute_id)
+        instructions::select_vote(ctx, court_name, dispute_id, commitment)
+    }
+
+    pub fn reveal_vote(
+        ctx: Context<RevealVote>,
+        court_name: String,
+        dispute_id: u64,
+        salt: String,
+    ) -> Result<()> {
+        instructions::reveal_vote(ctx, court_name, dispute_id, salt)
     }
 
     pub fn initialize_record(

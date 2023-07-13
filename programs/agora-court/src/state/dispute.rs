@@ -5,18 +5,19 @@ use anchor_lang::{prelude::*, solana_program::pubkey::PUBKEY_BYTES};
 pub struct DisputeConfiguration {
     pub grace_ends_at: i64,      // block time when interaction can no longer be disputed
     pub init_cases_ends_at: i64, // block time when users can no longer submit cases
-    pub ends_at: i64,            // block time of end of voting period
+    pub voting_ends_at: i64,     // block time when voting ends
+    pub dispute_ends_at: i64,    // block time when reveal of votes ends
     pub voter_rep_required: u64, // min # of tokens needed to vote on this dispute
     pub voter_rep_cost: u64,     // # of rep tokens for voters to deposit
     pub rep_cost: u64,           // # of rep tokens for parties to deposit
     pub pay_cost: u64,           // # of pay tokens for parties to deposit
-    pub min_votes: u64,           // minimum votes needed to reach conclusion
+    pub min_votes: u64,          // minimum votes needed to reach conclusion
     pub protocol_pay: u64,       // # of pay tokens the protocol itself provides
     pub protocol_rep: u64,       // # of rep tokens the protocol itself provides -- last two are optional and only necessary if the protocol wants to additionally incentivize voter participation
 }
 
 impl DisputeConfiguration {
-    pub const SIZE: usize = 8 + 8 + 8 + 8 + 8 + 8 + 8 + 8 + 8 + 8;
+    pub const SIZE: usize = 8 + 8 + 8 + 8 + 8 + 8 + 8 + 8 + 8 + 8 + 8;
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, Debug, Clone)]
@@ -74,14 +75,15 @@ impl Dispute {
 
     pub fn can_vote(&mut self) -> Result<()> {
         let timestamp = Clock::get().unwrap().unix_timestamp;
+        msg!("Status: {:#?}", self.status);
         match self.status {
             DisputeStatus::Voting => {
-                if timestamp < self.config.ends_at {
+                if timestamp < self.config.voting_ends_at {
                     return Ok(());
                 }
             },
             DisputeStatus::Waiting => {
-                if (timestamp > self.config.init_cases_ends_at || self.submitted_cases == self.users.len() as u8) && timestamp < self.config.ends_at {
+                if (timestamp > self.config.init_cases_ends_at || self.submitted_cases == self.users.len() as u8) && timestamp < self.config.voting_ends_at {
                     self.status = DisputeStatus::Voting;
                     return Ok(());
                 }
@@ -90,6 +92,26 @@ impl Dispute {
         }
 
         err!(InputError::DisputeNotVotable)
+    }
+
+    pub fn can_reveal(&mut self) -> Result<()> {
+        let timestamp = Clock::get().unwrap().unix_timestamp;
+        match self.status {
+            DisputeStatus::Reveal => {
+                if timestamp < self.config.dispute_ends_at {
+                    return Ok(());
+                }
+            },
+            DisputeStatus::Voting => {
+                if timestamp > self.config.voting_ends_at && timestamp < self.config.dispute_ends_at {
+                    self.status = DisputeStatus::Reveal;
+                    return Ok(());
+                } 
+            },
+            _ => {}
+        }
+
+        err!(InputError::NotRevealPeriod)
     }
 
     pub fn can_close(&mut self) -> Result<()> {
@@ -103,8 +125,8 @@ impl Dispute {
                     return Ok(());
                 }
             },
-            DisputeStatus::Voting => {
-                if timestamp > self.config.ends_at {
+            DisputeStatus::Reveal => {
+                if timestamp > self.config.dispute_ends_at {
                     //conclude w winner
                     self.status = DisputeStatus::Concluded { winner: Some(self.leader.user) };
                     return Ok(());
@@ -112,7 +134,7 @@ impl Dispute {
             },
             DisputeStatus::Waiting => {
                 //no one ever voted
-                if timestamp > self.config.ends_at {
+                if timestamp > self.config.voting_ends_at {
                     self.status = DisputeStatus::Concluded { winner: None };
                     return Ok(())
                 }
@@ -124,10 +146,11 @@ impl Dispute {
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq, Debug)]
 pub enum DisputeStatus {
     Grace, //includes interactions and time for anyone to submit first case
     Waiting, //a case has been made, waiting for all evidence to be provided
     Voting, //evidence is in, voting now
+    Reveal, //voting is finished, revealing encrypted votes
     Concluded { winner: Option<Pubkey> }, //winner declared or no dispute was started
 }

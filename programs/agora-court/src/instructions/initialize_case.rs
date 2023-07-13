@@ -27,8 +27,8 @@ pub fn initialize_case(ctx: Context<InitializeCase>, _court_name: String, disput
     //push dispute to binary heap
     let dispute_record = DisputeRecord {
         dispute_id,
-        dispute_end_time: dispute.config.ends_at,
-        user_voted_for: ctx.accounts.payer.key() //your own "case" - prevents voting for yourself
+        dispute_end_time: dispute.config.dispute_ends_at,
+        user_voted_for: Vote::Reveal { key: ctx.accounts.payer.key() } //your own "case" - prevents voting for yourself
     };
     voter_record.push(dispute_record);
 

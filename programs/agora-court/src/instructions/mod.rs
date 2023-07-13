@@ -24,3 +24,6 @@ pub mod select_vote;
 
 pub use edit_court::*;
 pub mod edit_court;
+
+pub use reveal_vote::*;
+pub mod reveal_vote;

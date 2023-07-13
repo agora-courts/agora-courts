@@ -39,7 +39,7 @@ pub fn claim(ctx: Context<Claim>, _court_name: String, _dispute_id: u64) -> Resu
                 voter_record.currently_staked_pay -= pay_amount_to_transfer;
                 voter_record.currently_staked_rep -= rep_amount_to_transfer;
                 return Ok(());
-            } else if x == involved_with {
+            } else if voter_record.verify_key(involved_with, x) {
                 //winning voter reward
                 //i know this literally doesn't check overflow at all - the other subtractions shouldn't matter for overflow/underflow?
                 voter_record.currently_staked_rep -= dispute.config.voter_rep_cost;
@@ -53,6 +53,7 @@ pub fn claim(ctx: Context<Claim>, _court_name: String, _dispute_id: u64) -> Resu
             }
         },
         DisputeStatus::Concluded { winner: None } => {
+            // CHECK THIS LOGIC
             //refund arb_cost
             voter_record.currently_staked_pay -= pay_amount_to_transfer;
             voter_record.currently_staked_rep -= rep_amount_to_transfer;
@@ -70,8 +71,8 @@ pub fn claim(ctx: Context<Claim>, _court_name: String, _dispute_id: u64) -> Resu
     let id_ne_bytes = u64::to_be_bytes(_dispute_id);
     let signer_seeds: &[&[&[u8]]] = &[
         &[
-            "dispute".as_bytes(), 
-            court_key.as_ref(), 
+            "dispute".as_bytes(),
+            court_key.as_ref(),
             id_ne_bytes.as_ref(),
             &[dispute.bump]
         ]

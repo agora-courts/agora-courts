@@ -54,4 +54,8 @@ pub enum InputError {
     InvalidProtocol,
     #[msg("User does not own this court.")]
     InvalidEditAuthority,
+    #[msg("Dispute not in reveal period.")]
+    NotRevealPeriod,
+    #[msg("Hash was incorrect or user did not vote in this dispute.")]
+    InvalidReveal
 }

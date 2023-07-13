@@ -1,37 +1,25 @@
 //use std::collections::BinaryHeap;
-use anchor_lang::{prelude::*, solana_program::pubkey::PUBKEY_BYTES};
-
+use anchor_lang::prelude::*;
+use anchor_lang::solana_program::keccak::hashv;
+use anchor_lang::solana_program::pubkey::PUBKEY_BYTES;
+use crate::error::InputError;
 use crate::tools::anchor::DISCRIMINATOR_SIZE;
 
-#[derive(AnchorDeserialize, AnchorSerialize, Debug, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq, Debug)]
+pub enum Vote {
+    Secret { hash: [u8; 32] },
+    Reveal { key: Pubkey },
+}
+
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug)] //add Debug?
 pub struct DisputeRecord {
     pub dispute_id: u64,
     pub dispute_end_time: i64,
-    pub user_voted_for: Pubkey,
+    pub user_voted_for: Vote,
 }
 
-// impl Ord for DisputeRecord {
-//     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-//         self.dispute_end_time.cmp(&other.dispute_end_time).reverse()
-//     }
-// }
-
-// impl PartialOrd for DisputeRecord {
-//     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-//         Some(self.cmp(other))
-//     }
-// }
-
-// impl PartialEq for DisputeRecord {
-//     fn eq(&self, other: &Self) -> bool {
-//         self.dispute_id == other.dispute_id
-//     }
-// }
-
-// impl Eq for DisputeRecord {}
-
 impl DisputeRecord {
-    pub const SIZE: usize = 8 + 8 + PUBKEY_BYTES;
+    pub const SIZE: usize = 8 + 8 + (1 + PUBKEY_BYTES);
 }
 
 #[account]
@@ -60,6 +48,40 @@ impl VoterRecord {
         } else {
             false
         }
+    }
+
+    pub fn verify_hash(&mut self, pubkey: Pubkey, salt: &String, dispute_id: u64) -> Result<()> {
+        //calculate hash
+        let buffer: &[&[u8]] = &[pubkey.as_ref(), salt.as_bytes()];
+        let hash: [u8; 32] = hashv(buffer).0;
+        msg!("Hash: {:#?}", hash);
+
+        //update record or error
+        match self.claim_queue
+            .iter_mut()
+            .find(|rec| (**rec).dispute_id == dispute_id) {
+                Some(record) => {
+                    if let Vote::Secret { hash: val } = record.user_voted_for {
+                        if hash == val {
+                            record.user_voted_for = Vote::Reveal { key: pubkey };
+                            return Ok(());
+                        }
+                    }
+                },
+                None => {}
+            }
+        
+        err!(InputError::InvalidReveal)
+    }
+
+    pub fn verify_key(&mut self, vote: Vote, pubkey: Pubkey) -> bool {
+        if let Vote::Reveal { key } = vote {
+            if key == pubkey {
+                return true;
+            }
+        }
+
+        false
     }
 
     pub fn push(&mut self, item: DisputeRecord) {
