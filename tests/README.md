@@ -13,4 +13,4 @@ Also ensure your Anchor.toml is set up properly with the wallet address pointing
 The default config is set through config.ts. Set the court name, the max number of concurrent disputes, and more to test further.
 
 ## Run Unit Tests
-1. Run `anchor test`
+Run `anchor test` to run all tests or `anchor run basic` to run a single one.

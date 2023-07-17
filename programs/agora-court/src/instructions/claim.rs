@@ -31,7 +31,7 @@ pub fn claim(ctx: Context<Claim>, _court_name: String, _dispute_id: u64) -> Resu
     match dispute.status {
         DisputeStatus::Concluded { winner: Some(x) } => {
             if x == payer.key() {
-                //refund arb_cost
+                //winning party => refund arb_cost
                 voter_record.currently_staked_pay -= pay_amount_to_transfer;
                 voter_record.currently_staked_rep -= rep_amount_to_transfer;
             } else if dispute.users.contains(&Some(payer.key())) {
@@ -53,10 +53,17 @@ pub fn claim(ctx: Context<Claim>, _court_name: String, _dispute_id: u64) -> Resu
             }
         },
         DisputeStatus::Concluded { winner: None } => {
-            // CHECK THIS LOGIC
-            //refund arb_cost
-            voter_record.currently_staked_pay -= pay_amount_to_transfer;
-            voter_record.currently_staked_rep -= rep_amount_to_transfer;
+            if dispute.users.contains(&Some(payer.key())) {
+                //refund arb_cost
+                voter_record.currently_staked_pay -= pay_amount_to_transfer;
+                voter_record.currently_staked_rep -= rep_amount_to_transfer;
+            } else {
+                // refund voters
+                rep_amount_to_transfer = dispute.config.voter_rep_cost;
+                pay_amount_to_transfer = 0;
+
+                voter_record.currently_staked_rep -= rep_amount_to_transfer;
+            }
         },
         _ => {
             return err!(InputError::DisputeNotClaimable); //not closed

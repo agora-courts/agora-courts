@@ -1,4 +1,4 @@
-use crate::{error::{InputError}, state::dispute::*, state::{court::Court, voter_record::VoterRecord}};
+use crate::{error::InputError, state::dispute::*, state::{court::Court, voter_record::VoterRecord}};
 use anchor_lang::prelude::*;
 use anchor_spl::{token::{Mint, TokenAccount, transfer, Token, Transfer}, associated_token::AssociatedToken};
 

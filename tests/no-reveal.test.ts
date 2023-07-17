@@ -1,11 +1,11 @@
 import * as anchor from '@coral-xyz/anchor';
 import { PublicKey } from "@solana/web3.js";
 import { expect } from 'chai';
-import { maxDisputeVotes, decimals, courtName, basicDisputeOptions as disputeOptions } from './config';
+import { maxDisputeVotes, decimals, courtName, noRevealDisputeOptions as disputeOptions } from './config';
 import { CourtSuite, DisputeConfig } from './court-suite';
 import { UserSuite } from './user-suite';
 
-describe('agora-court-basic', () => {
+describe('agora-court-no-reveal-inconclusive', () => {
     //find the provider and set the anchor provider
     let cs = new CourtSuite();
     let userOne = new UserSuite();
@@ -283,56 +283,6 @@ describe('agora-court-basic', () => {
             // check record currently staked rep
             expect(recordState.currentlyStakedRep.eq(disputeConfig.voterRepCost)).to.be.true;
         });
-
-        it('reveal_vote!', async () => {
-            // calculate wait time
-            let waitTime = 0;
-            let curTime = Math.floor(Date.now() / 1000);
-            let revealTime = disputeConfig.votingEndsAt.toNumber();
-            if (curTime < revealTime) {
-                waitTime = (revealTime - curTime + 5) * 1000;
-            }
-
-            // call reveal ix
-            await new Promise<void>((resolve, reject) => {
-                setTimeout(async () => {
-                  try {
-                    // call ix
-                    await userThree.revealVote(cs.disputeID);
-
-                    // check dispute account status
-                    let disputeState = await cs.program.account.dispute.fetch(cs.dispute.publicKey);
-                    let expectedDisputeStatus = { reveal: {} }
-                    expect(JSON.stringify(disputeState.status)).to.equal(JSON.stringify(expectedDisputeStatus));
-                    expect(disputeState.votes.eq(new anchor.BN(1))).to.be.true;
-
-                    // voter record reveal
-                    let recordState = await cs.program.account.voterRecord.fetch(userThree.record.publicKey);
-                    let expectedVote = {
-                        reveal: {
-                            key: userThree.votedFor,
-                        }
-                    }
-                    expect(JSON.stringify(recordState.claimQueue[0].userVotedFor)).to.equal(JSON.stringify(expectedVote));
-
-                    // case account of user two
-                    let caseState = await cs.program.account.case.fetch(userTwo.case.publicKey);
-                    expect(caseState.votes.eq(new anchor.BN(1))).to.be.true;
-
-                    // expected leader
-                    let expectedLeader = {
-                        user: userThree.votedFor,
-                        votes: new anchor.BN(1)
-                    }
-                    expect(JSON.stringify(disputeState.leader)).to.equal(JSON.stringify(expectedLeader))
-
-                    resolve();
-                  } catch (err) {
-                    reject(err);
-                  }
-                }, waitTime); // wait until time
-            });
-        });
     });
 
     describe('claim!', () => {
@@ -355,7 +305,7 @@ describe('agora-court-basic', () => {
                     let disputeState = await cs.program.account.dispute.fetch(cs.dispute.publicKey);
                     let expectedDisputeStatus = { 
                         concluded: {
-                            winner: userThree.votedFor
+                            winner: null
                         }
                     }
                     expect(JSON.stringify(disputeState.status)).to.equal(JSON.stringify(expectedDisputeStatus));
@@ -368,8 +318,8 @@ describe('agora-court-basic', () => {
             });
         });
     
-        describe('claim_all!', () => {
-            it('claim_loser!', async () => {
+        describe('claim_all_no_conclusion!', () => {
+            it('claim_first!', async () => {
                 await userOne.claim(cs.disputeID);
 
                 // check record
@@ -380,10 +330,10 @@ describe('agora-court-basic', () => {
                 // check repATA
                 let repATA = cs.getRepATA(userOne.user.publicKey);
                 let balance = await cs.getTokenBalance(repATA);
-                expect(balance).to.equal(0);
+                expect(balance).to.equal(disputeOptions.partyRepCost.toNumber());
             });
             
-            it('claim_winner!', async () => {
+            it('claim_second!', async () => {
                 await userTwo.claim(cs.disputeID);
 
                 // check record
@@ -408,7 +358,7 @@ describe('agora-court-basic', () => {
                 // check repATA
                 let repAta = cs.getRepATA(userThree.user.publicKey);
                 let balance = await cs.getTokenBalance(repAta);
-                let expectedBalance = disputeOptions.voterRepRequired.add(disputeOptions.partyRepCost).add(disputeOptions.protocolRep);
+                let expectedBalance = disputeOptions.voterRepRequired;
                 expect(balance).to.equal(expectedBalance.toNumber());
             });
         });

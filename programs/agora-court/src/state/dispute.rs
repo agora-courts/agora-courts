@@ -119,16 +119,27 @@ impl Dispute {
 
         match self.status {
             DisputeStatus::Grace => {
+                // conclude w no cases
                 if timestamp > self.config.grace_ends_at && self.submitted_cases == 0 {
-                    //conclude w no cases
                     self.status = DisputeStatus::Concluded { winner: None };
                     return Ok(());
                 }
             },
             DisputeStatus::Reveal => {
+                // conclude w winner
                 if timestamp > self.config.dispute_ends_at {
-                    //conclude w winner
-                    self.status = DisputeStatus::Concluded { winner: Some(self.leader.user) };
+                    if self.votes < self.config.min_votes {
+                        self.status = DisputeStatus::Concluded { winner: None };
+                    } else {
+                        self.status = DisputeStatus::Concluded { winner: Some(self.leader.user) };
+                    }
+                    return Ok(());
+                }
+            },
+            DisputeStatus::Voting => {
+                // no one revealed
+                if timestamp > self.config.dispute_ends_at {
+                    self.status = DisputeStatus::Concluded { winner: None };
                     return Ok(());
                 }
             },

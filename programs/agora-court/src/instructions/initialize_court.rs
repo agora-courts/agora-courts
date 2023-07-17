@@ -1,14 +1,16 @@
-use crate::state::*;
+use crate::{state::*, error::InputError};
 use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
 
 //First IX a protocol would invoke
 
 pub fn initialize_court(
-    ctx: Context<InitializeCourt>, 
+    ctx: Context<InitializeCourt>,
     _court_name: String,
     max_dispute_votes: u16
 ) -> Result<()> {
+    require!(max_dispute_votes <= 200, InputError::MaxDisputeTooHigh);
+
     let court = &mut ctx.accounts.court;
     let bump = *ctx.bumps.get("court").unwrap();
 

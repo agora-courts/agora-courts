@@ -57,8 +57,9 @@ export class CourtSuite {
 
     // authorities
     editAuthority: Keypair;
-    repMintAuthority: Keypair;
+    mintAuthority: Keypair;
     repMint: Keypair;
+    payMint: Keypair;
     protocol: Keypair;
 
     // info
@@ -89,7 +90,8 @@ export class CourtSuite {
         //create auth accs
         this.editAuthority = Keypair.generate();
         this.repMint = Keypair.generate();
-        this.repMintAuthority = Keypair.generate();
+        this.payMint = Keypair.generate();
+        this.mintAuthority = Keypair.generate();
         this.protocol = Keypair.generate();
 
         //set court pda
@@ -114,7 +116,7 @@ export class CourtSuite {
             createInitializeMint2Instruction(
                 this.repMint.publicKey,
                 decimals,
-                this.repMintAuthority.publicKey,
+                this.mintAuthority.publicKey,
                 null
             )
         )
@@ -150,7 +152,7 @@ export class CourtSuite {
             this.editAuthority,
             this.repMint.publicKey,
             ata,
-            this.repMintAuthority,
+            this.mintAuthority,
             amount,
             this.decimals,
         )

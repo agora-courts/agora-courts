@@ -46,7 +46,7 @@ pub fn select_vote(
         );
 
         token::transfer(cpi_ctx, rep_cost)?;
-        voter_record.currently_staked_pay += rep_cost;
+        voter_record.currently_staked_rep += rep_cost;
     }
 
     Ok(())

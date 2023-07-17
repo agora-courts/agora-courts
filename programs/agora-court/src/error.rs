@@ -57,5 +57,7 @@ pub enum InputError {
     #[msg("Dispute not in reveal period.")]
     NotRevealPeriod,
     #[msg("Hash was incorrect or user did not vote in this dispute.")]
-    InvalidReveal
+    InvalidReveal,
+    #[msg("Max Dispute Votes Must be <= 200.")]
+    MaxDisputeTooHigh,
 }
