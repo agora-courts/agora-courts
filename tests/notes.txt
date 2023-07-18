@@ -2,7 +2,6 @@ NEEDS ATTENTION:
 - TIES
 - withdraw protocol amounts ix
 - not enough ppl submit cases
-- votes < min votes
 
 
 ***THINGS TO CHECK:***
@@ -12,7 +11,7 @@ NEEDS ATTENTION:
 - init case goes into len of record
 - change constraint in select_vote on record to impl logic in tx to allow vote changing
 - let protocol withdraw funds if inconclusive - do it automatically with close :0
-- TIES ARE LITERALLYY NOT HANDLED LOL
+- TIES ARE LITERALLY NOT HANDLED LOL
 
 TEST CASES:
 everyone does everything right -> works
