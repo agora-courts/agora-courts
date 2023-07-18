@@ -32,19 +32,3 @@ Game theory and cryptoeconomic incentivization is used to encourage unbiased vot
 [Agora Tokens](https://github.com/IlliniBlockchain/agora-tokens) is an open and decentralized curated registry of tokens. It is a community-managed list of Solana tokens open to any project and curated through the power of Agora arbitration and economic incentives.
 
 Anyone can submit a token and its information along with a deposit. The submission is then placed in a challenge period. If no one challenges it, it is automatically placed in the token list. Otherwise, an Agora court jury will vote to determine whether to include or reject the listing. Further attributes called badges can be added to a token, and their acceptances follow the similar process.
-
-## Testing Instructions
-Run the following commands from the terminal. Tests may be modified to create different dispute parameters and users. The default configuration for tests is basic, with a 50 minute total dispute period - `close` may only be run after this period concludes.
-```
-1. anchor run initcourt
-2. anchor run initdispute
-3. anchor run interact
-4. change config.ts user
-5. anchor run interact
-6. anchor run initcase
-7. change config.ts user back
-8. anchor run initcase
-9. anchor run vote
-10. anchor run close
-11. anchor run claim on all users
-```
