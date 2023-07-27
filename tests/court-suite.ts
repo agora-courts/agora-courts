@@ -102,7 +102,7 @@ export class CourtSuite {
         this.courtName = courtName;
 
         //airdrop 2 sol to editAuth
-        await this.requestAirdrop(this.editAuthority.publicKey, 2);
+        await this.requestAirdrop(this.editAuthority.publicKey, 1);
 
         //build tx
         let tx = new Transaction().add(

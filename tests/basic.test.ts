@@ -359,6 +359,7 @@ describe('agora-court-basic', () => {
                         }
                     }
                     expect(JSON.stringify(disputeState.status)).to.equal(JSON.stringify(expectedDisputeStatus));
+                    expect(Object.keys(disputeState.status)[0]).to.equal("concluded");
 
                     resolve();
                   } catch (error) {
