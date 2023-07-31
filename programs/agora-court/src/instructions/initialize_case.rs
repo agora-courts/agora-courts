@@ -19,7 +19,6 @@ pub fn initialize_case(ctx: Context<InitializeCase>, _court_name: String, disput
     let case = &mut ctx.accounts.case;
     let bump = *ctx.bumps.get("case").unwrap();
     case.set_inner(Case {
-        votes: 0,
         evidence,
         bump,
     });

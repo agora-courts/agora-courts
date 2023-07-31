@@ -79,14 +79,10 @@ describe('agora-court-basic', () => {
 
         let expectedDisputeState = {
             users: disputeOptions.users,
+            votes: new Array<anchor.BN>(disputeOptions.users.length).fill(new anchor.BN(0)),
             status: { grace: {} },
             interactions: 0,
             submittedCases: 0,
-            votes: new anchor.BN(0),
-            leader: {
-                user: PublicKey.default,
-                votes: new anchor.BN(0)
-            },
             config: disputeConfig,
             bump: cs.dispute.bump
         };
@@ -194,7 +190,6 @@ describe('agora-court-basic', () => {
             // check case account
             let caseState = await cs.program.account.case.fetch(userOne.case.publicKey);
             let expectedCase = {
-                votes: new anchor.BN(0),
                 evidence: evidence,
                 bump: userOne.case.bump
             };
@@ -228,7 +223,6 @@ describe('agora-court-basic', () => {
             // check case account
             let caseState = await cs.program.account.case.fetch(userTwo.case.publicKey);
             let expectedCase = {
-                votes: new anchor.BN(0),
                 evidence: evidence,
                 bump: userTwo.case.bump
             };
@@ -304,7 +298,7 @@ describe('agora-court-basic', () => {
                     let disputeState = await cs.program.account.dispute.fetch(cs.dispute.publicKey);
                     let expectedDisputeStatus = { reveal: {} }
                     expect(JSON.stringify(disputeState.status)).to.equal(JSON.stringify(expectedDisputeStatus));
-                    expect(disputeState.votes.eq(new anchor.BN(1))).to.be.true;
+                    expect(disputeState.votes[1].eq(new anchor.BN(1))).to.be.true;
 
                     // voter record reveal
                     let recordState = await cs.program.account.voterRecord.fetch(userThree.record.publicKey);
@@ -314,17 +308,6 @@ describe('agora-court-basic', () => {
                         }
                     }
                     expect(JSON.stringify(recordState.claimQueue[0].userVotedFor)).to.equal(JSON.stringify(expectedVote));
-
-                    // case account of user two
-                    let caseState = await cs.program.account.case.fetch(userTwo.case.publicKey);
-                    expect(caseState.votes.eq(new anchor.BN(1))).to.be.true;
-
-                    // expected leader
-                    let expectedLeader = {
-                        user: userThree.votedFor,
-                        votes: new anchor.BN(1)
-                    }
-                    expect(JSON.stringify(disputeState.leader)).to.equal(JSON.stringify(expectedLeader))
 
                     resolve();
                   } catch (err) {

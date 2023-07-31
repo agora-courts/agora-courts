@@ -107,14 +107,10 @@ describe('agora-court-basic', () => {
 
                 let expectedDisputeState = {
                     users: disputeOptions.users,
+                    votes: new Array<anchor.BN>(disputeOptions.users.length).fill(new anchor.BN(0)),
                     status: { grace: {} },
                     interactions: 0,
                     submittedCases: 0,
-                    votes: new anchor.BN(0),
-                    leader: {
-                        user: PublicKey.default,
-                        votes: new anchor.BN(0)
-                    },
                     config: disputeConfig,
                     bump: cs.dispute.bump
                 };
@@ -189,7 +185,6 @@ describe('agora-court-basic', () => {
                 // check case account
                 let caseState = await cs.program.account.case.fetch(userOne.case.publicKey);
                 let expectedCase = {
-                    votes: new anchor.BN(0),
                     evidence: evidence,
                     bump: userOne.case.bump
                 };
@@ -208,7 +203,6 @@ describe('agora-court-basic', () => {
                 // check case account
                 caseState = await cs.program.account.case.fetch(userTwo.case.publicKey);
                 expectedCase = {
-                    votes: new anchor.BN(0),
                     evidence: evidence,
                     bump: userTwo.case.bump
                 };

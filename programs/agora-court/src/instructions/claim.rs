@@ -44,8 +44,8 @@ pub fn claim(ctx: Context<Claim>, _court_name: String, _dispute_id: u64) -> Resu
                 //i know this literally doesn't check overflow at all - the other subtractions shouldn't matter for overflow/underflow?
                 voter_record.currently_staked_rep -= dispute.config.voter_rep_cost;
 
-                rep_amount_to_transfer = (((dispute.submitted_cases as u64 - 1) * dispute.config.rep_cost) + dispute.config.protocol_rep + (dispute.votes * dispute.config.voter_rep_cost)) / dispute.leader.votes;
-                pay_amount_to_transfer = (((dispute.submitted_cases as u64 - 1) * dispute.config.pay_cost) + dispute.config.protocol_pay) / dispute.leader.votes;
+                rep_amount_to_transfer = (((dispute.submitted_cases as u64 - 1) * dispute.config.rep_cost) + dispute.config.protocol_rep + (dispute.total_votes() * dispute.config.voter_rep_cost)) / dispute.leader_votes();
+                pay_amount_to_transfer = (((dispute.submitted_cases as u64 - 1) * dispute.config.pay_cost) + dispute.config.protocol_pay) / dispute.leader_votes();
             } else {
                 //losing voter -= voter_record
                 voter_record.currently_staked_rep -= dispute.config.voter_rep_cost;

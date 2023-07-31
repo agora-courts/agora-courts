@@ -1,18 +1,19 @@
-NEEDS ATTENTION:
-- TIES
+KNOWN ISSUES:
 - withdraw protocol amounts ix
 - not enough ppl submit cases
 - interact more than once
 
 
-THINGS TO CHECK:
+THINGS TO WRITE TEST CASES FOR:
+- ties as expected
 - when there aren't enough votes
 - not enough ppl submit cases
 - init case goes into len of record
 - change constraint in select_vote on record to impl logic in tx to allow vote changing
 - let protocol withdraw funds if inconclusive - do it automatically with close :0
+- can i init case without interact
 
-For disputes:
+Random thoughts:
 - what if someone joins a dispute and it doesn't need to start timers until the other person joins
 
 TEST CASES:

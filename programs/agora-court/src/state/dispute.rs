@@ -20,35 +20,38 @@ impl DisputeConfiguration {
     pub const SIZE: usize = 8 + 8 + 8 + 8 + 8 + 8 + 8 + 8 + 8 + 8 + 8;
 }
 
-#[derive(AnchorDeserialize, AnchorSerialize, Debug, Clone)]
-pub struct CaseLeader {
-    pub user: Pubkey,
-    pub votes: u64,
-}
-
-impl CaseLeader {
-    pub const SIZE: usize = PUBKEY_BYTES + 8;
-}
-
 #[account]
 pub struct Dispute {
     pub users: Vec<Option<Pubkey>>,
+    pub votes: Vec<u64>,
     pub status: DisputeStatus,
     pub interactions: u8,
     pub submitted_cases: u8,
-    pub votes: u64,
-    pub leader: CaseLeader,
     pub config: DisputeConfiguration,
     pub bump: u8,
 }
 //note to self: need better flow checks between DisputeStatus enums (same issue aggregated from interact.rs warning)
 impl Dispute {
+    pub fn vote(&mut self, candidate: Pubkey) -> Result<()> {
+        let idx: usize = self.users.iter().position(|&user| user == Some(candidate)).unwrap();
+        self.votes[idx] += 1;
+        Ok(())
+    }
+
+    pub fn total_votes(&self) -> u64 {
+        self.votes.iter().sum()
+    }
+
+    pub fn leader_votes(&self) -> u64 {
+        *self.votes.iter().max().unwrap()
+    }
+
     pub fn get_size(users: &Vec<Option<Pubkey>>) -> usize {
         DISCRIMINATOR_SIZE
             + 4 + ((1 + PUBKEY_BYTES) * users.len())
-            + (1 + (1 + PUBKEY_BYTES))
-            + 1 + 1 + 8
-            + CaseLeader::SIZE
+            + 4 + (8 * users.len())
+            + DisputeStatus::SIZE
+            + 1 + 1
             + DisputeConfiguration::SIZE
             + 1
     }
@@ -128,10 +131,17 @@ impl Dispute {
             DisputeStatus::Reveal => {
                 // conclude w winner
                 if timestamp > self.config.dispute_ends_at {
-                    if self.votes < self.config.min_votes {
+                    if self.total_votes() < self.config.min_votes {
                         self.status = DisputeStatus::Concluded { winner: None };
                     } else {
-                        self.status = DisputeStatus::Concluded { winner: Some(self.leader.user) };
+                        let max = self.leader_votes();
+                        let count = self.votes.iter().filter(|&&x| x == max).count();
+                        if count > 1 {
+                            self.status = DisputeStatus::Concluded { winner: None }
+                        } else {
+                            let idx = self.votes.iter().position(|&x| x == max).unwrap();
+                            self.status = DisputeStatus::Concluded { winner: self.users[idx] }
+                        }
                     }
                     return Ok(());
                 }
@@ -164,4 +174,8 @@ pub enum DisputeStatus {
     Voting, //evidence is in, voting now
     Reveal, //voting is finished, revealing encrypted votes
     Concluded { winner: Option<Pubkey> }, //winner declared or no dispute was started
+}
+
+impl DisputeStatus {
+    pub const SIZE: usize = 1 + (1 + PUBKEY_BYTES);
 }

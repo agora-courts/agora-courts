@@ -9,7 +9,6 @@ pub fn reveal_vote(
 ) -> Result<()> {
     //grab accounts
     let dispute = &mut ctx.accounts.dispute;
-    let case = &mut ctx.accounts.case;
 
     //check status
     dispute.can_reveal()?;
@@ -19,14 +18,7 @@ pub fn reveal_vote(
     ctx.accounts.voter_record.verify_hash(candidate, &salt, dispute_id)?;
 
     //increment votes
-    case.votes += 1;
-    dispute.votes += 1;
-    if case.votes > dispute.leader.votes {
-        dispute.leader = CaseLeader {
-            user: candidate,
-            votes: case.votes
-        }
-    }
+    dispute.vote(candidate)?;
 
     Ok(())
 }
@@ -39,7 +31,6 @@ pub fn reveal_vote(
 )]
 pub struct RevealVote<'info> {
     #[account(
-        mut,
         seeds = ["case".as_bytes(), dispute.key().as_ref(), candidate.key().as_ref()],
         bump = case.bump
     )]

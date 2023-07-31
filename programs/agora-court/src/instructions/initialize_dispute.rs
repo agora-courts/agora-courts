@@ -30,20 +30,17 @@ pub fn initialize_dispute(
 
     let provided_rep = config.protocol_rep;
     let provided_pay = config.protocol_pay;
+    let len = users.len();
 
     //init dispute account with initial data
     let dispute = &mut ctx.accounts.dispute;
     let bump = *ctx.bumps.get("dispute").unwrap();
     dispute.set_inner(Dispute {
         users,
+        votes: vec![0; len],
         status: DisputeStatus::Grace,
         interactions: 0,
         submitted_cases: 0,
-        votes: 0,
-        leader: CaseLeader {
-            user: Pubkey::default(),
-            votes: 0,
-        },
         config,
         bump,
     });
